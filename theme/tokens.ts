@@ -1,0 +1,64 @@
+export const designTokens = {
+  color: {
+    brand: {
+      50: "#edf4f8",
+      100: "#d1e1ed",
+      200: "#a3c2da",
+      300: "#78a9cc",
+      400: "#4b8dbb",
+      500: "#327bac",
+      600: "#1A67A3",
+      700: "#175A8E",
+      800: "#155282",
+      900: "#103e62",
+      950: "#0b2a43",
+    },
+    neutral: {
+      0: "#ffffff",
+      50: "#f8f8f8",
+      100: "#f6f8fa",
+      200: "#eaeaea",
+      300: "#d1d9e0",
+      400: "#bfbfbf",
+      500: "#888888",
+      600: "#666666",
+      700: "#4d4d4d",
+      800: "#333333",
+      900: "#222222",
+      950: "#111111",
+    },
+  },
+  layout: {
+    contentMaxWidth: 1280,
+    headerHeight: 55,
+    sidebarWidth: 280,
+  },
+  motion: {
+    durationFast: "150ms",
+    durationStandard: "240ms",
+    easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+  },
+  radius: {
+    sm: 3,
+    md: 4,
+    lg: 6,
+    xl: 8,
+    full: 999,
+  },
+  shadow: {
+    focus: "0 0 0 3px rgba(26, 103, 163, 0.25)",
+    raised: "3px 3px 10px rgba(0, 0, 0, 0.15)",
+  },
+  space: {
+    xs: 4,
+    sm: 8,
+    md: 12,
+    lg: 16,
+    xl: 24,
+    "2xl": 32,
+    "3xl": 48,
+    "4xl": 64,
+  },
+} as const;
+
+export type StatusTone = "error" | "info" | "neutral" | "success" | "warning";

@@ -1,0 +1,55 @@
+@layer theme, base, mui, components, utilities;
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: light;
+    background: var(--mui-palette-background-default, #ffffff);
+    color: var(--mui-palette-text-primary, #333333);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    min-height: 100%;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--mui-palette-background-default, #ffffff);
+    color: var(--mui-palette-text-primary, #333333);
+    font-family:
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      "Noto Sans",
+      Helvetica,
+      Arial,
+      sans-serif;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: #d1e1ed;
+    color: #103e62;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
