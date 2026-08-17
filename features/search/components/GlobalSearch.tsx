@@ -152,7 +152,13 @@ export function GlobalSearch({
                   {error}
                 </Typography>
               ) : matchingResults.length > 0 ? (
-                <Stack aria-label="Search results" component="ul" role="listbox" spacing={0.5} sx={{ listStyle: "none", m: 0, p: 0 }}>
+                <Stack
+                  aria-label="Search results"
+                  component="ul"
+                  role="listbox"
+                  spacing={0.5}
+                  sx={{ listStyle: "none", m: 0, p: 0 }}
+                >
                   {matchingResults.map((result, index) => (
                     <Box
                       aria-selected={index === selectedResultIndex}
@@ -168,7 +174,11 @@ export function GlobalSearch({
                         p: 1.5,
                       }}
                     >
-                      <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", flexWrap: "wrap" }}>
+                      <Stack
+                        direction="row"
+                        spacing={0.75}
+                        sx={{ alignItems: "center", flexWrap: "wrap" }}
+                      >
                         <Typography color="primary.main" sx={{ fontWeight: 700 }} variant="caption">
                           {result.id}
                         </Typography>

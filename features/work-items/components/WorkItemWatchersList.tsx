@@ -55,7 +55,10 @@ export function WorkItemWatchersList({ isLoading = false, watchers }: WorkItemWa
           spacing={2}
           sx={{ alignItems: "center", border: 1, borderColor: "divider", borderRadius: 1, p: 2 }}
         >
-          <Avatar aria-label={watcher.name} sx={{ bgcolor: "secondary.main", height: 30, width: 30 }}>
+          <Avatar
+            aria-label={watcher.name}
+            sx={{ bgcolor: "secondary.main", height: 30, width: 30 }}
+          >
             {getInitials(watcher.name)}
           </Avatar>
           <Box>

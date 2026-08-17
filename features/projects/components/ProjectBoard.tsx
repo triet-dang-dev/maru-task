@@ -151,7 +151,11 @@ interface ProjectBoardProps {
   projectId: string;
 }
 
-export function ProjectBoard({ boards = defaultBoards, isLoading = false, projectId }: ProjectBoardProps) {
+export function ProjectBoard({
+  boards = defaultBoards,
+  isLoading = false,
+  projectId,
+}: ProjectBoardProps) {
   const [boardViews, setBoardViews] = useState(boards);
   const [selectedBoardId, setSelectedBoardId] = useState(boards[0]?.id ?? "");
   const [selectedFilter, setSelectedFilter] = useState("All");
@@ -297,10 +301,18 @@ export function ProjectBoard({ boards = defaultBoards, isLoading = false, projec
           ))}
         </Stack>
         <Stack direction="row" spacing={1}>
-          <Button onClick={openConfiguration} startIcon={<Settings2 aria-hidden="true" size={16} />} variant="outline">
+          <Button
+            onClick={openConfiguration}
+            startIcon={<Settings2 aria-hidden="true" size={16} />}
+            variant="outline"
+          >
             Configure board
           </Button>
-          <Button onClick={() => setIsInlineCreateOpen((isOpen) => !isOpen)} startIcon={<Plus aria-hidden="true" size={16} />} variant="solid">
+          <Button
+            onClick={() => setIsInlineCreateOpen((isOpen) => !isOpen)}
+            startIcon={<Plus aria-hidden="true" size={16} />}
+            variant="solid"
+          >
             Add work package
           </Button>
         </Stack>

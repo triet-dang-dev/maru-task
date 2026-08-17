@@ -51,15 +51,12 @@ export function WorkItemRelationsList({
     );
   }
 
-  const groups = relations.reduce<Map<string, WorkItemRelationListItem[]>>(
-    (result, relation) => {
-      const group = result.get(relation.relationType) ?? [];
-      group.push(relation);
-      result.set(relation.relationType, group);
-      return result;
-    },
-    new Map(),
-  );
+  const groups = relations.reduce<Map<string, WorkItemRelationListItem[]>>((result, relation) => {
+    const group = result.get(relation.relationType) ?? [];
+    group.push(relation);
+    result.set(relation.relationType, group);
+    return result;
+  }, new Map());
 
   return (
     <Stack aria-label="Work package relations" component="section" role="region" spacing={4}>
@@ -68,7 +65,18 @@ export function WorkItemRelationsList({
           <Typography component="h3" sx={{ fontWeight: 700, mb: 1.5 }} variant="subtitle2">
             {getGroupLabel(relationType)}
           </Typography>
-          <Stack component="ul" divider={<Box sx={{ borderTop: 1, borderColor: "divider" }} />} sx={{ border: 1, borderColor: "divider", borderRadius: 1, listStyle: "none", m: 0, p: 0 }}>
+          <Stack
+            component="ul"
+            divider={<Box sx={{ borderTop: 1, borderColor: "divider" }} />}
+            sx={{
+              border: 1,
+              borderColor: "divider",
+              borderRadius: 1,
+              listStyle: "none",
+              m: 0,
+              p: 0,
+            }}
+          >
             {group.map((relation) => (
               <Stack
                 component="li"

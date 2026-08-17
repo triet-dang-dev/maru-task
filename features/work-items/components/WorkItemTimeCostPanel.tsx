@@ -37,7 +37,12 @@ export function WorkItemTimeCostPanel({ costEntries, timeEntries }: WorkItemTime
     if (!note.trim() || !Number.isFinite(parsedHours) || parsedHours <= 0) return;
     setLocalTimeEntries((entries) => [
       ...entries,
-      { date: "Today", hours: parsedHours, id: `local-time-${entries.length + 1}`, note: note.trim() },
+      {
+        date: "Today",
+        hours: parsedHours,
+        id: `local-time-${entries.length + 1}`,
+        note: note.trim(),
+      },
     ]);
     setHours("");
     setNote("");
@@ -75,8 +80,20 @@ export function WorkItemTimeCostPanel({ costEntries, timeEntries }: WorkItemTime
           </tbody>
         </table>
         <Stack direction={{ sm: "row" }} spacing={2} sx={{ mt: 2 }}>
-          <TextField label="Hours" onChange={(event) => setHours(event.target.value)} size="small" type="number" value={hours} />
-          <TextField fullWidth label="Time entry note" onChange={(event) => setNote(event.target.value)} size="small" value={note} />
+          <TextField
+            label="Hours"
+            onChange={(event) => setHours(event.target.value)}
+            size="small"
+            type="number"
+            value={hours}
+          />
+          <TextField
+            fullWidth
+            label="Time entry note"
+            onChange={(event) => setNote(event.target.value)}
+            size="small"
+            value={note}
+          />
           <Button onClick={addTimeEntry}>Add time entry</Button>
         </Stack>
       </Box>

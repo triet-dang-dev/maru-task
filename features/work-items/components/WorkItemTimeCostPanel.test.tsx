@@ -10,8 +10,12 @@ describe("WorkItemTimeCostPanel", () => {
 
     render(
       <WorkItemTimeCostPanel
-        costEntries={[{ amount: 125, date: "2026-08-14", id: "cost-1", note: "Research materials" }]}
-        timeEntries={[{ date: "2026-08-13", hours: 2.5, id: "time-1", note: "Reviewed API contract" }]}
+        costEntries={[
+          { amount: 125, date: "2026-08-14", id: "cost-1", note: "Research materials" },
+        ]}
+        timeEntries={[
+          { date: "2026-08-13", hours: 2.5, id: "time-1", note: "Reviewed API contract" },
+        ]}
       />,
     );
 

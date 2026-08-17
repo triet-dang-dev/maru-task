@@ -12,7 +12,9 @@ describe("ProjectTimeCostReport", () => {
     expect(screen.getByLabelText("To date")).toBeInTheDocument();
     expect(screen.getByText("18.5 h")).toBeInTheDocument();
     expect(screen.getByText("$775.00")).toBeInTheDocument();
-    expect(screen.getByRole("table", { name: "Project time and cost entries" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("table", { name: "Project time and cost entries" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Review the release checklist")).toBeInTheDocument();
   });
 });

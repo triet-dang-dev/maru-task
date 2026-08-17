@@ -21,22 +21,13 @@ import {
 } from "@/components/ui/SectionCard";
 import { SelectBox, type SelectBoxOption } from "@/components/ui/SelectBox";
 
-import {
-  WorkItemActivityTimeline,
-  type WorkItemActivityEvent,
-} from "./WorkItemActivityTimeline";
-import {
-  WorkItemRelationsList,
-  type WorkItemRelationListItem,
-} from "./WorkItemRelationsList";
+import { WorkItemActivityTimeline, type WorkItemActivityEvent } from "./WorkItemActivityTimeline";
+import { WorkItemRelationsList, type WorkItemRelationListItem } from "./WorkItemRelationsList";
 import {
   WorkItemAttachmentsList,
   type WorkItemAttachmentListItem,
 } from "./WorkItemAttachmentsList";
-import {
-  WorkItemWatchersList,
-  type WorkItemWatcherListItem,
-} from "./WorkItemWatchersList";
+import { WorkItemWatchersList, type WorkItemWatcherListItem } from "./WorkItemWatchersList";
 import { WorkItemTimeCostPanel } from "./WorkItemTimeCostPanel";
 
 import {
@@ -52,7 +43,14 @@ import {
 } from "../service";
 import type { PriorityItem, UserItem, WorkItemDetail } from "../types";
 
-const workPackageTabs = ["overview", "activity", "files", "relations", "watchers", "time-cost"] as const;
+const workPackageTabs = [
+  "overview",
+  "activity",
+  "files",
+  "relations",
+  "watchers",
+  "time-cost",
+] as const;
 type WorkPackageTab = (typeof workPackageTabs)[number];
 
 type WorkItemOverviewFormValues = {
@@ -518,26 +516,28 @@ export function WorkItemDetailPageContent({
               <WorkItemActivityTimeline events={placeholderActivity} />
               <div className="border-t border-[var(--mui-palette-divider)] pt-6">
                 <h3 className="text-base font-semibold">Add comment</h3>
-              <form
-                className="mt-4 grid gap-4"
-                noValidate
-                onSubmit={handleCommentSubmit(addComment)}
-              >
-                <InputField
-                  control={commentControl}
-                  label="Comment"
-                  minRows={3}
-                  multiline
-                  name="body"
-                  rules={{ validate: (value) => value.trim().length > 0 || "Comment is required." }}
-                />
-                {commentSuccess ? <p role="status">Comment added.</p> : null}
-                <div className="flex justify-end">
-                  <Button isLoading={isCommenting} type="submit">
-                    Add comment
-                  </Button>
-                </div>
-              </form>
+                <form
+                  className="mt-4 grid gap-4"
+                  noValidate
+                  onSubmit={handleCommentSubmit(addComment)}
+                >
+                  <InputField
+                    control={commentControl}
+                    label="Comment"
+                    minRows={3}
+                    multiline
+                    name="body"
+                    rules={{
+                      validate: (value) => value.trim().length > 0 || "Comment is required.",
+                    }}
+                  />
+                  {commentSuccess ? <p role="status">Comment added.</p> : null}
+                  <div className="flex justify-end">
+                    <Button isLoading={isCommenting} type="submit">
+                      Add comment
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           ) : null}
@@ -546,35 +546,35 @@ export function WorkItemDetailPageContent({
               <WorkItemRelationsList relations={placeholderRelations} />
               <div className="border-t border-[var(--mui-palette-divider)] pt-6">
                 <h3 className="text-base font-semibold">Add relation</h3>
-              <form
-                className="mt-4 grid gap-4"
-                noValidate
-                onSubmit={handleRelationSubmit(addRelation)}
-              >
-                <InputField
-                  control={relationControl}
-                  label="Related work item ID"
-                  name="relatedWorkItemId"
-                  rules={{
-                    validate: (value) =>
-                      value.trim().length > 0 || "Related work item ID is required.",
-                  }}
-                />
-                <InputField
-                  control={relationControl}
-                  label="Relation type"
-                  name="relationType"
-                  rules={{
-                    validate: (value) => value.trim().length > 0 || "Relation type is required.",
-                  }}
-                />
-                {relationSuccess ? <p role="status">Relation added.</p> : null}
-                <div className="flex justify-end">
-                  <Button isLoading={isAddingRelation} type="submit">
-                    Add relation
-                  </Button>
-                </div>
-              </form>
+                <form
+                  className="mt-4 grid gap-4"
+                  noValidate
+                  onSubmit={handleRelationSubmit(addRelation)}
+                >
+                  <InputField
+                    control={relationControl}
+                    label="Related work item ID"
+                    name="relatedWorkItemId"
+                    rules={{
+                      validate: (value) =>
+                        value.trim().length > 0 || "Related work item ID is required.",
+                    }}
+                  />
+                  <InputField
+                    control={relationControl}
+                    label="Relation type"
+                    name="relationType"
+                    rules={{
+                      validate: (value) => value.trim().length > 0 || "Relation type is required.",
+                    }}
+                  />
+                  {relationSuccess ? <p role="status">Relation added.</p> : null}
+                  <div className="flex justify-end">
+                    <Button isLoading={isAddingRelation} type="submit">
+                      Add relation
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           ) : null}
@@ -583,26 +583,27 @@ export function WorkItemDetailPageContent({
               <WorkItemWatchersList watchers={placeholderWatchers} />
               <div className="border-t border-[var(--mui-palette-divider)] pt-6">
                 <h3 className="text-base font-semibold">Add watcher</h3>
-              <form
-                className="mt-4 grid gap-4"
-                noValidate
-                onSubmit={handleWatcherSubmit(addWatcher)}
-              >
-                <InputField
-                  control={watcherControl}
-                  label="Watcher user ID"
-                  name="watcherUserId"
-                  rules={{
-                    validate: (value) => value.trim().length > 0 || "Watcher user ID is required.",
-                  }}
-                />
-                {watcherSuccess ? <p role="status">Watcher added.</p> : null}
-                <div className="flex justify-end">
-                  <Button isLoading={isAddingWatcher} type="submit">
-                    Add watcher
-                  </Button>
-                </div>
-              </form>
+                <form
+                  className="mt-4 grid gap-4"
+                  noValidate
+                  onSubmit={handleWatcherSubmit(addWatcher)}
+                >
+                  <InputField
+                    control={watcherControl}
+                    label="Watcher user ID"
+                    name="watcherUserId"
+                    rules={{
+                      validate: (value) =>
+                        value.trim().length > 0 || "Watcher user ID is required.",
+                    }}
+                  />
+                  {watcherSuccess ? <p role="status">Watcher added.</p> : null}
+                  <div className="flex justify-end">
+                    <Button isLoading={isAddingWatcher} type="submit">
+                      Add watcher
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           ) : null}
@@ -611,48 +612,49 @@ export function WorkItemDetailPageContent({
               <WorkItemAttachmentsList attachments={placeholderAttachments} />
               <div className="border-t border-[var(--mui-palette-divider)] pt-6">
                 <h3 className="text-base font-semibold">Link attachment</h3>
-              <form
-                className="mt-4 grid gap-4"
-                noValidate
-                onSubmit={handleAttachmentSubmit(linkAttachment)}
-              >
-                <InputField
-                  control={attachmentControl}
-                  label="Attachment name"
-                  name="fileName"
-                  rules={{
-                    validate: (value) => value.trim().length > 0 || "Attachment name is required.",
-                  }}
-                />
-                <InputField
-                  control={attachmentControl}
-                  label="Content type"
-                  name="contentType"
-                  rules={{
-                    validate: (value) => value.trim().length > 0 || "Content type is required.",
-                  }}
-                />
-                <InputField
-                  control={attachmentControl}
-                  label="Size in bytes"
-                  name="sizeInBytes"
-                  rules={{ validate: (value) => value.trim().length > 0 || "Size is required." }}
-                />
-                <InputField
-                  control={attachmentControl}
-                  label="Storage path"
-                  name="storagePath"
-                  rules={{
-                    validate: (value) => value.trim().length > 0 || "Storage path is required.",
-                  }}
-                />
-                {attachmentSuccess ? <p role="status">Attachment linked.</p> : null}
-                <div className="flex justify-end">
-                  <Button isLoading={isLinkingAttachment} type="submit">
-                    Link attachment
-                  </Button>
-                </div>
-              </form>
+                <form
+                  className="mt-4 grid gap-4"
+                  noValidate
+                  onSubmit={handleAttachmentSubmit(linkAttachment)}
+                >
+                  <InputField
+                    control={attachmentControl}
+                    label="Attachment name"
+                    name="fileName"
+                    rules={{
+                      validate: (value) =>
+                        value.trim().length > 0 || "Attachment name is required.",
+                    }}
+                  />
+                  <InputField
+                    control={attachmentControl}
+                    label="Content type"
+                    name="contentType"
+                    rules={{
+                      validate: (value) => value.trim().length > 0 || "Content type is required.",
+                    }}
+                  />
+                  <InputField
+                    control={attachmentControl}
+                    label="Size in bytes"
+                    name="sizeInBytes"
+                    rules={{ validate: (value) => value.trim().length > 0 || "Size is required." }}
+                  />
+                  <InputField
+                    control={attachmentControl}
+                    label="Storage path"
+                    name="storagePath"
+                    rules={{
+                      validate: (value) => value.trim().length > 0 || "Storage path is required.",
+                    }}
+                  />
+                  {attachmentSuccess ? <p role="status">Attachment linked.</p> : null}
+                  <div className="flex justify-end">
+                    <Button isLoading={isLinkingAttachment} type="submit">
+                      Link attachment
+                    </Button>
+                  </div>
+                </form>
               </div>
             </div>
           ) : null}

@@ -91,7 +91,7 @@ describe("NotificationCenter", () => {
     expect(screen.getByRole("status", { name: "Loading notifications" })).toBeInTheDocument();
 
     rerender(<NotificationCenter notifications={notifications} />);
-  await user.click(screen.getByRole("button", { name: "All" }));
+    await user.click(screen.getByRole("button", { name: "All" }));
     expect(screen.getByText("User 3")).toBeInTheDocument();
     expect(screen.queryByText("User 4")).not.toBeInTheDocument();
 

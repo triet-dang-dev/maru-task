@@ -95,7 +95,11 @@ export function ProjectBacklog({
             Prioritize upcoming work and track the sprint burn-down.
           </Typography>
         </Box>
-        <Typography component={Link} href={workItemsHref} sx={{ color: "primary.main", fontWeight: 700 }}>
+        <Typography
+          component={Link}
+          href={workItemsHref}
+          sx={{ color: "primary.main", fontWeight: 700 }}
+        >
           Open work packages
         </Typography>
       </Stack>
@@ -108,12 +112,25 @@ export function ProjectBacklog({
           </Typography>
         </Paper>
       ) : (
-        <Box sx={{ display: "grid", gap: 4, gridTemplateColumns: { lg: "minmax(0, 1fr) minmax(22rem, 0.9fr)" } }}>
+        <Box
+          sx={{
+            display: "grid",
+            gap: 4,
+            gridTemplateColumns: { lg: "minmax(0, 1fr) minmax(22rem, 0.9fr)" },
+          }}
+        >
           <Paper component="section" sx={{ overflow: "hidden" }} variant="outlined">
             <Stack
               direction={{ sm: "row" }}
               spacing={2}
-              sx={{ alignItems: { sm: "center" }, borderBottom: 1, borderColor: "divider", justifyContent: "space-between", px: 4, py: 3 }}
+              sx={{
+                alignItems: { sm: "center" },
+                borderBottom: 1,
+                borderColor: "divider",
+                justifyContent: "space-between",
+                px: 4,
+                py: 3,
+              }}
             >
               <Typography component="h2" sx={{ fontWeight: 700 }} variant="subtitle1">
                 Prioritized work packages
@@ -137,11 +154,21 @@ export function ProjectBacklog({
               </Stack>
             </Stack>
             {selectedSprint ? (
-              <Typography color="text.secondary" role="status" sx={{ px: 4, pt: 2 }} variant="caption">
+              <Typography
+                color="text.secondary"
+                role="status"
+                sx={{ px: 4, pt: 2 }}
+                variant="caption"
+              >
                 Sprint 12 is planned
               </Typography>
             ) : null}
-            <Stack aria-label="Prioritized work packages" component="ol" divider={<Box sx={{ borderTop: 1, borderColor: "divider" }} />} sx={{ listStylePosition: "inside", m: 0, p: 0 }}>
+            <Stack
+              aria-label="Prioritized work packages"
+              component="ol"
+              divider={<Box sx={{ borderTop: 1, borderColor: "divider" }} />}
+              sx={{ listStylePosition: "inside", m: 0, p: 0 }}
+            >
               {backlogItems.map((item, index) => (
                 <Stack
                   component="li"
@@ -159,7 +186,12 @@ export function ProjectBacklog({
                     </Typography>
                   </Box>
                   <Stack direction="row" spacing={1} sx={{ alignItems: "center", flexShrink: 0 }}>
-                    <Chip color={priorityColor[item.priority]} label={item.priority} size="small" variant="outlined" />
+                    <Chip
+                      color={priorityColor[item.priority]}
+                      label={item.priority}
+                      size="small"
+                      variant="outlined"
+                    />
                     <Typography color="text.secondary" variant="caption">
                       {item.points} pts
                     </Typography>
@@ -206,35 +238,62 @@ export function ProjectBacklog({
                 </Typography>
               </Box>
             ) : (
-            <Box sx={{ mt: 3, overflowX: "auto" }}>
-              <svg aria-label="Burndown chart" height="230" viewBox="0 0 600 230" width="100%">
-                {[0, 6, 12, 18].map((value) => {
-                  const y = 22 + (1 - value / 18) * 136;
-                  return (
-                    <g key={value}>
-                      <line stroke="currentColor" strokeOpacity="0.14" x1="42" x2="558" y1={y} y2={y} />
-                      <text fill="currentColor" fontSize="11" textAnchor="end" x="34" y={y + 4}>
-                        {value}
-                      </text>
-                    </g>
-                  );
-                })}
-                <polyline fill="none" points={toChartPoints(idealPoints, maxPoints)} stroke="#7f8c8d" strokeDasharray="6 4" strokeWidth="2" />
-                <polyline fill="none" points={toChartPoints(burndownData, maxPoints)} stroke="#1a67a3" strokeWidth="3" />
-                {burndownDays.map((day, index) => (
-                  <text fill="currentColor" fontSize="11" key={day} textAnchor="middle" x={42 + (index / 6) * 516} y="184">
-                    {day}
+              <Box sx={{ mt: 3, overflowX: "auto" }}>
+                <svg aria-label="Burndown chart" height="230" viewBox="0 0 600 230" width="100%">
+                  {[0, 6, 12, 18].map((value) => {
+                    const y = 22 + (1 - value / 18) * 136;
+                    return (
+                      <g key={value}>
+                        <line
+                          stroke="currentColor"
+                          strokeOpacity="0.14"
+                          x1="42"
+                          x2="558"
+                          y1={y}
+                          y2={y}
+                        />
+                        <text fill="currentColor" fontSize="11" textAnchor="end" x="34" y={y + 4}>
+                          {value}
+                        </text>
+                      </g>
+                    );
+                  })}
+                  <polyline
+                    fill="none"
+                    points={toChartPoints(idealPoints, maxPoints)}
+                    stroke="#7f8c8d"
+                    strokeDasharray="6 4"
+                    strokeWidth="2"
+                  />
+                  <polyline
+                    fill="none"
+                    points={toChartPoints(burndownData, maxPoints)}
+                    stroke="#1a67a3"
+                    strokeWidth="3"
+                  />
+                  {burndownDays.map((day, index) => (
+                    <text
+                      fill="currentColor"
+                      fontSize="11"
+                      key={day}
+                      textAnchor="middle"
+                      x={42 + (index / 6) * 516}
+                      y="184"
+                    >
+                      {day}
+                    </text>
+                  ))}
+                  <text fill="currentColor" fontSize="12" textAnchor="middle" x="300" y="218">
+                    Day
                   </text>
-                ))}
-                <text fill="currentColor" fontSize="12" textAnchor="middle" x="300" y="218">
-                  Day
-                </text>
-              </svg>
-            </Box>
+                </svg>
+              </Box>
             )}
             <Stack direction="row" spacing={3} sx={{ color: "text.secondary", mt: 1 }}>
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                <Box sx={{ borderTop: 2, borderColor: "#7f8c8d", borderStyle: "dashed", width: 22 }} />
+                <Box
+                  sx={{ borderTop: 2, borderColor: "#7f8c8d", borderStyle: "dashed", width: 22 }}
+                />
                 <Typography variant="caption">Ideal remaining</Typography>
               </Stack>
               <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>

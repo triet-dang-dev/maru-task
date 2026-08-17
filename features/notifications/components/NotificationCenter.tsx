@@ -121,41 +121,67 @@ export function NotificationCenter({ isLoading = false, notifications }: Notific
                     py: 2.5,
                   }}
                 >
-                    <Stack direction="row" spacing={1} sx={{ alignItems: "flex-start", justifyContent: "space-between" }}>
-                      <Box sx={{ minWidth: 0 }}>
-                        {notification.workItemId || notification.project || notification.reason ? (
-                          <Stack direction="row" spacing={0.75} sx={{ alignItems: "center", flexWrap: "wrap" }}>
-                            {notification.status ? <Chip label={notification.status} size="small" variant="outlined" /> : null}
-                            {notification.workItemId ? (
-                              <Typography color="primary.main" sx={{ fontWeight: 700 }} variant="caption">
-                                {notification.workItemId}
-                              </Typography>
-                            ) : null}
-                            {notification.project ? (
-                              <Typography color="text.secondary" variant="caption">
-                                {notification.project}
-                              </Typography>
-                            ) : null}
-                            {notification.reason ? <Chip label={notification.reason} size="small" /> : null}
-                          </Stack>
-                        ) : null}
-                        <Typography sx={{ mt: notification.workItemId || notification.project || notification.reason ? 1 : 0 }} variant="body2">
-                          <Box component="span" sx={{ fontWeight: 700 }}>
-                            {notification.actor}
-                          </Box>{" "}
-                          {notification.message}
-                        </Typography>
-                      </Box>
-                      {!notification.read ? (
-                        <IconButton
-                          aria-label="Mark notification as read"
-                          onClick={() => setReadNotificationIds((ids) => new Set(ids).add(notification.id))}
-                          size="small"
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ alignItems: "flex-start", justifyContent: "space-between" }}
+                  >
+                    <Box sx={{ minWidth: 0 }}>
+                      {notification.workItemId || notification.project || notification.reason ? (
+                        <Stack
+                          direction="row"
+                          spacing={0.75}
+                          sx={{ alignItems: "center", flexWrap: "wrap" }}
                         >
-                          <Check aria-hidden="true" size={16} />
-                        </IconButton>
+                          {notification.status ? (
+                            <Chip label={notification.status} size="small" variant="outlined" />
+                          ) : null}
+                          {notification.workItemId ? (
+                            <Typography
+                              color="primary.main"
+                              sx={{ fontWeight: 700 }}
+                              variant="caption"
+                            >
+                              {notification.workItemId}
+                            </Typography>
+                          ) : null}
+                          {notification.project ? (
+                            <Typography color="text.secondary" variant="caption">
+                              {notification.project}
+                            </Typography>
+                          ) : null}
+                          {notification.reason ? (
+                            <Chip label={notification.reason} size="small" />
+                          ) : null}
+                        </Stack>
                       ) : null}
-                    </Stack>
+                      <Typography
+                        sx={{
+                          mt:
+                            notification.workItemId || notification.project || notification.reason
+                              ? 1
+                              : 0,
+                        }}
+                        variant="body2"
+                      >
+                        <Box component="span" sx={{ fontWeight: 700 }}>
+                          {notification.actor}
+                        </Box>{" "}
+                        {notification.message}
+                      </Typography>
+                    </Box>
+                    {!notification.read ? (
+                      <IconButton
+                        aria-label="Mark notification as read"
+                        onClick={() =>
+                          setReadNotificationIds((ids) => new Set(ids).add(notification.id))
+                        }
+                        size="small"
+                      >
+                        <Check aria-hidden="true" size={16} />
+                      </IconButton>
+                    ) : null}
+                  </Stack>
                   <Typography
                     color="text.secondary"
                     sx={{ display: "block", mt: 0.5 }}

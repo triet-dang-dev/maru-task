@@ -51,7 +51,9 @@ describe("GlobalSearch", () => {
 
     expect(screen.getByRole("combobox", { name: "Search scope" })).toBeInTheDocument();
     expect(screen.getByRole("listbox", { name: "Search results" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: /WP-142.*Migration.*Review the release checklist/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: /WP-142.*Migration.*Review the release checklist/i }),
+    ).toBeInTheDocument();
     expect(screen.getByText("In progress")).toBeInTheDocument();
 
     await user.keyboard("{Enter}");

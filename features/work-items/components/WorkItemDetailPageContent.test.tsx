@@ -121,7 +121,9 @@ describe("WorkItemDetailPageContent", () => {
 
     render(<WorkItemDetailPageContent activeTab="time-cost" projectId="42" workItemId="101" />);
 
-    expect(await screen.findByRole("tab", { name: "Time & cost", selected: true })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: "Time & cost", selected: true }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Time entries" })).toBeInTheDocument();
     expect(screen.getByRole("table", { name: "Cost entries" })).toBeInTheDocument();
     expect(screen.queryByLabelText("Subject")).not.toBeInTheDocument();
@@ -273,7 +275,9 @@ describe("WorkItemDetailPageContent", () => {
 
     render(<WorkItemDetailPageContent activeTab="relations" projectId="42" workItemId="101" />);
 
-    expect(await screen.findByRole("region", { name: "Work package relations" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("region", { name: "Work package relations" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Blocks")).toBeInTheDocument();
     await user.type(await screen.findByLabelText("Related work item ID"), "102");
     await user.type(screen.getByLabelText("Relation type"), "relates");
@@ -301,8 +305,8 @@ describe("WorkItemDetailPageContent", () => {
 
     render(<WorkItemDetailPageContent activeTab="watchers" projectId="42" workItemId="101" />);
 
-  expect(await screen.findByRole("region", { name: "Watchers" })).toBeInTheDocument();
-  expect(screen.getByText("Dana Chen")).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Watchers" })).toBeInTheDocument();
+    expect(screen.getByText("Dana Chen")).toBeInTheDocument();
     await user.type(await screen.findByLabelText("Watcher user ID"), "7");
     await user.click(screen.getByRole("button", { name: "Add watcher" }));
 
@@ -328,8 +332,8 @@ describe("WorkItemDetailPageContent", () => {
 
     render(<WorkItemDetailPageContent activeTab="files" projectId="42" workItemId="101" />);
 
-  expect(await screen.findByRole("region", { name: "Attachments" })).toBeInTheDocument();
-  expect(screen.getByText("migration-plan.pdf")).toBeInTheDocument();
+    expect(await screen.findByRole("region", { name: "Attachments" })).toBeInTheDocument();
+    expect(screen.getByText("migration-plan.pdf")).toBeInTheDocument();
     await user.type(await screen.findByLabelText("Attachment name"), "migration-plan.pdf");
     await user.type(screen.getByLabelText("Content type"), "application/pdf");
     await user.type(screen.getByLabelText("Size in bytes"), "2048");
