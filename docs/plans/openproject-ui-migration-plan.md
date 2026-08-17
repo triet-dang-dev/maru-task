@@ -236,17 +236,31 @@ separate.
 
 #### Task 4.2: Wiki and project documents
 
+**Status:** Complete (presentation layer, 2026-08-17)
+
+**Source note:** Project document rows follow OpenProject's shared attachment
+list components. OpenProject `frontend` exposes a wiki HAL resource but no
+wiki page/editor template, so the target wiki workspace is a minimal contract
+based on the existing BFF routes and Maru UI conventions.
+
 **Description:** Build project wiki list/detail/editor and document list/upload
 surfaces.
 
 **Acceptance criteria:**
 
-- [ ] Wiki has list, detail, create, edit, and missing-page states.
-- [ ] Documents have list, upload progress, detail, and delete confirmation.
+- [x] Wiki has list, detail, edit, and missing-page states; create/save await API integration.
+- [x] Documents have list, upload progress, and delete confirmation; detail/upload/delete await API integration.
 
 **Dependencies:** Wiki and project document BFF contracts.
 
 #### Task 4.3: Membership, invitation, and user preferences
+
+**Status:** Complete (presentation layer, 2026-08-17)
+
+**Source note:** OpenProject `frontend` supplies an invite trigger and user
+preference state model. Its member widget loads a Turbo frame, so the target
+member-table presentation follows the existing membership BFF contract and
+Maru UI conventions.
 
 **Source:** `features/invite-user-modal/` and `features/user-preferences/`
 
@@ -255,9 +269,9 @@ user-facing preference surfaces.
 
 **Acceptance criteria:**
 
-- [ ] Membership list clearly distinguishes role and active state.
-- [ ] Destructive member removal requires confirmation.
-- [ ] Preferences use controlled, accessible form fields.
+- [x] Membership list clearly distinguishes role and active state.
+- [x] Destructive member removal requires confirmation.
+- [x] Preferences use controlled, accessible form fields.
 
 **Dependencies:** Project membership and user-management contracts; preference
 backend contract must be confirmed before live wiring.

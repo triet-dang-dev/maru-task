@@ -59,10 +59,13 @@ export function AppShell({
           >
             <Menu aria-hidden="true" size={20} strokeWidth={1.8} />
           </IconButton>
-          <Typography sx={{ flexGrow: 1, fontWeight: 600 }} variant="body2">
+          <Typography
+            sx={{ display: { sm: "block", xs: "none" }, flexGrow: 1, fontWeight: 600 }}
+            variant="body2"
+          >
             {contextLabel}
           </Typography>
-          {actions}
+          <Box sx={{ flexShrink: 0, minWidth: 0 }}>{actions}</Box>
         </Toolbar>
       </AppBar>
 

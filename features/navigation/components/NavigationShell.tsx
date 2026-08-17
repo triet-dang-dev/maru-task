@@ -3,7 +3,6 @@
 import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import {
   CalendarDays,
   ChartGantt,
@@ -179,37 +178,51 @@ function AuthenticatedNavigationShell({
   return (
     <AppShell
       actions={
-        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+        <Stack
+          direction="row"
+          spacing={{ sm: 1, xs: 0.5 }}
+          sx={{ alignItems: "center", minWidth: 0 }}
+        >
           <GlobalSearch />
           <NotificationCenter notifications={placeholderNotifications} />
-          <Avatar
-            aria-label={session.displayName}
-            sx={{ bgcolor: "primary.main", height: 32, width: 32 }}
+          <Stack
+            direction="row"
+            spacing={0.5}
+            sx={{
+              ml: 2,
+              pl: 2,
+            }}
           >
-            {initials}
-          </Avatar>
-          <IconButton aria-label="Sign out" disabled={isSigningOut} onClick={signOut} size="small">
-            <LogOut aria-hidden="true" size={18} strokeWidth={1.8} />
-          </IconButton>
+            <Avatar
+              aria-label={session.displayName}
+              sx={{
+                bgcolor: "rgba(255, 255, 255, 0.16)",
+                border: 1,
+                borderColor: "rgba(255, 255, 255, 0.42)",
+                fontSize: "0.75rem",
+                fontWeight: 700,
+                height: 30,
+                width: 30,
+              }}
+            >
+              {initials}
+            </Avatar>
+            <IconButton
+              aria-label="Sign out"
+              disabled={isSigningOut}
+              onClick={signOut}
+              size="small"
+              sx={{ "&:hover": { bgcolor: "rgba(255, 255, 255, 0.14)" }, color: "inherit" }}
+            >
+              <LogOut aria-hidden="true" size={17} strokeWidth={1.8} />
+            </IconButton>
+          </Stack>
         </Stack>
       }
       brand="Maru Task"
       contextLabel={getContextLabel(pathname)}
       navigation={navigation}
       projectNavigation={projectNavigation}
-      sidebarFooter={
-        <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
-          <Avatar sx={{ bgcolor: "secondary.main", height: 30, width: 30 }}>{initials}</Avatar>
-          <Stack spacing={0}>
-            <Typography sx={{ fontWeight: 700 }} variant="body2">
-              {session.displayName}
-            </Typography>
-            <Typography color="text.secondary" variant="caption">
-              {session.role}
-            </Typography>
-          </Stack>
-        </Stack>
-      }
     >
       {children}
     </AppShell>

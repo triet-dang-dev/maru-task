@@ -71,15 +71,23 @@ export function GlobalSearch({
   };
 
   return (
-    <Box component="form" role="search" sx={{ position: "relative", width: { sm: 240, xs: 40 } }}>
+    <Box
+      component="form"
+      role="search"
+      sx={{ position: "relative", width: { lg: 340, sm: 280, xs: "min(48vw, 180px)" } }}
+    >
       <Stack
         direction="row"
         sx={{
           alignItems: "center",
           border: 1,
-          borderColor: "primary.light",
+          bgcolor: "rgba(255, 255, 255, 0.08)",
+          borderColor: "rgba(255, 255, 255, 0.72)",
           borderRadius: 1,
+          minHeight: 32,
           px: 1,
+          transition: "background-color 150ms cubic-bezier(0.16, 1, 0.3, 1)",
+          "&:focus-within": { bgcolor: "rgba(255, 255, 255, 0.16)" },
         }}
       >
         <Search aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -109,7 +117,14 @@ export function GlobalSearch({
             }
           }}
           placeholder="Search"
-          sx={{ color: "inherit", flex: 1, fontSize: "0.875rem", minWidth: 0, px: 1 }}
+          sx={{
+            color: "inherit",
+            flex: 1,
+            fontSize: "0.875rem",
+            minWidth: 0,
+            px: 0.75,
+            "& input::placeholder": { color: "rgba(255, 255, 255, 0.74)", opacity: 1 },
+          }}
           type="search"
           value={query}
         />
