@@ -22,6 +22,24 @@ import {
 import { SelectBox, type SelectBoxOption } from "@/components/ui/SelectBox";
 
 import {
+  WorkItemActivityTimeline,
+  type WorkItemActivityEvent,
+} from "./WorkItemActivityTimeline";
+import {
+  WorkItemRelationsList,
+  type WorkItemRelationListItem,
+} from "./WorkItemRelationsList";
+import {
+  WorkItemAttachmentsList,
+  type WorkItemAttachmentListItem,
+} from "./WorkItemAttachmentsList";
+import {
+  WorkItemWatchersList,
+  type WorkItemWatcherListItem,
+} from "./WorkItemWatchersList";
+import { WorkItemTimeCostPanel } from "./WorkItemTimeCostPanel";
+
+import {
   createWorkItemAttachment,
   createWorkItemComment,
   createWorkItemRelation,
@@ -34,7 +52,7 @@ import {
 } from "../service";
 import type { PriorityItem, UserItem, WorkItemDetail } from "../types";
 
-const workPackageTabs = ["overview", "activity", "files", "relations", "watchers"] as const;
+const workPackageTabs = ["overview", "activity", "files", "relations", "watchers", "time-cost"] as const;
 type WorkPackageTab = (typeof workPackageTabs)[number];
 
 type WorkItemOverviewFormValues = {
@@ -54,6 +72,71 @@ type AttachmentFormValues = {
   sizeInBytes: string;
   storagePath: string;
 };
+
+const placeholderActivity: WorkItemActivityEvent[] = [
+  {
+    action: "updated the due date",
+    actor: "Dana Chen",
+    id: "activity-1",
+    timestamp: "18 minutes ago",
+  },
+  {
+    action: "commented",
+    actor: "Morgan Tate",
+    body: "The delivery checklist is ready for review.",
+    id: "activity-2",
+    timestamp: "Yesterday",
+  },
+  {
+    action: "changed the status to In progress",
+    actor: "Riley Park",
+    id: "activity-3",
+    timestamp: "Monday",
+  },
+];
+
+const placeholderRelations: WorkItemRelationListItem[] = [
+  {
+    id: "relation-1",
+    relationType: "blocks",
+    workItemId: "102",
+    workItemStatus: "Open",
+    workItemSubject: "Publish the migration guide",
+  },
+  {
+    id: "relation-2",
+    relationType: "relates",
+    workItemId: "103",
+    workItemStatus: "In progress",
+    workItemSubject: "Validate the integration contract",
+  },
+];
+
+const placeholderAttachments: WorkItemAttachmentListItem[] = [
+  {
+    contentType: "application/pdf",
+    fileName: "migration-plan.pdf",
+    id: "attachment-1",
+    size: "2 MB",
+    uploadState: "Uploaded",
+  },
+];
+
+const placeholderWatchers: WorkItemWatcherListItem[] = [
+  {
+    id: "watcher-1",
+    name: "Dana Chen",
+    subscribedAt: "Subscribed 18 minutes ago",
+  },
+];
+
+const placeholderTimeEntries = [
+  { date: "2026-08-13", hours: 2.5, id: "time-1", note: "Reviewed API contract" },
+];
+
+const placeholderCostEntries = [
+  { amount: 125, date: "2026-08-14", id: "cost-1", note: "Research materials" },
+];
 
 interface WorkItemDetailPageContentProps {
   activeTab?: WorkPackageTab;
@@ -343,7 +426,11 @@ export function WorkItemDetailPageContent({
             {workPackageTabs.map((tab) => {
               const isSelected = tab === activeTab;
               const label =
-                tab === "files" ? "Files" : `${tab.slice(0, 1).toUpperCase()}${tab.slice(1)}`;
+                tab === "files"
+                  ? "Files"
+                  : tab === "time-cost"
+                    ? "Time & cost"
+                    : `${tab.slice(0, 1).toUpperCase()}${tab.slice(1)}`;
               const href =
                 tab === "overview"
                   ? `/projects/${projectId}/work-items/${workItemId}`
@@ -427,8 +514,10 @@ export function WorkItemDetailPageContent({
             </form>
           ) : null}
           {activeTab === "activity" ? (
-            <div className="border-t border-slate-200 pt-6">
-              <h3 className="text-base font-semibold">Add comment</h3>
+            <div className="grid gap-6">
+              <WorkItemActivityTimeline events={placeholderActivity} />
+              <div className="border-t border-[var(--mui-palette-divider)] pt-6">
+                <h3 className="text-base font-semibold">Add comment</h3>
               <form
                 className="mt-4 grid gap-4"
                 noValidate
@@ -449,11 +538,14 @@ export function WorkItemDetailPageContent({
                   </Button>
                 </div>
               </form>
+              </div>
             </div>
           ) : null}
           {activeTab === "relations" ? (
-            <div className="border-t border-slate-200 pt-6">
-              <h3 className="text-base font-semibold">Add relation</h3>
+            <div className="grid gap-6">
+              <WorkItemRelationsList relations={placeholderRelations} />
+              <div className="border-t border-[var(--mui-palette-divider)] pt-6">
+                <h3 className="text-base font-semibold">Add relation</h3>
               <form
                 className="mt-4 grid gap-4"
                 noValidate
@@ -483,11 +575,14 @@ export function WorkItemDetailPageContent({
                   </Button>
                 </div>
               </form>
+              </div>
             </div>
           ) : null}
           {activeTab === "watchers" ? (
-            <div className="border-t border-slate-200 pt-6">
-              <h3 className="text-base font-semibold">Add watcher</h3>
+            <div className="grid gap-6">
+              <WorkItemWatchersList watchers={placeholderWatchers} />
+              <div className="border-t border-[var(--mui-palette-divider)] pt-6">
+                <h3 className="text-base font-semibold">Add watcher</h3>
               <form
                 className="mt-4 grid gap-4"
                 noValidate
@@ -508,11 +603,14 @@ export function WorkItemDetailPageContent({
                   </Button>
                 </div>
               </form>
+              </div>
             </div>
           ) : null}
           {activeTab === "files" ? (
-            <div className="border-t border-slate-200 pt-6">
-              <h3 className="text-base font-semibold">Link attachment</h3>
+            <div className="grid gap-6">
+              <WorkItemAttachmentsList attachments={placeholderAttachments} />
+              <div className="border-t border-[var(--mui-palette-divider)] pt-6">
+                <h3 className="text-base font-semibold">Link attachment</h3>
               <form
                 className="mt-4 grid gap-4"
                 noValidate
@@ -555,7 +653,14 @@ export function WorkItemDetailPageContent({
                   </Button>
                 </div>
               </form>
+              </div>
             </div>
+          ) : null}
+          {activeTab === "time-cost" ? (
+            <WorkItemTimeCostPanel
+              costEntries={placeholderCostEntries}
+              timeEntries={placeholderTimeEntries}
+            />
           ) : null}
         </div>
       </SectionCardContent>

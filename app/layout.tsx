@@ -8,8 +8,8 @@ import { AppProviders } from "./providers";
 
 export const metadata: Metadata = {
   title: {
-    default: "Northstar UI Boilerplate",
-    template: "%s | Northstar UI Boilerplate",
+    default: "Maru Task Boilerplate",
+    template: "%s | Maru Task Boilerplate",
   },
   description:
     "A production-ready Next.js, MUI, and Tailwind design-system foundation for enterprise applications.",

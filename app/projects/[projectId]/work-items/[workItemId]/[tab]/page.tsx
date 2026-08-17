@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { PageContainer, PageHeader } from "@/components/layout";
 import { WorkItemDetailPageContent } from "@/features/work-items/components/WorkItemDetailPageContent";
 
-const supportedTabs = ["activity", "files", "relations", "watchers"] as const;
+const supportedTabs = ["activity", "files", "relations", "watchers", "time-cost"] as const;
 type SupportedTab = (typeof supportedTabs)[number];
 
 interface WorkItemDetailTabPageProps {

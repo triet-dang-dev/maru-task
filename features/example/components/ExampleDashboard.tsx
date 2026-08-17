@@ -15,7 +15,7 @@ export function ExampleDashboard() {
   return (
     <AppShell
       actions={<DashboardTopbarActions />}
-      brand="Northstar UI"
+      brand="Maru Task"
       contextLabel="Design system / Overview"
       navigation={[
         {

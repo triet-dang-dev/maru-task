@@ -16,7 +16,7 @@ describe("AppShell", () => {
 
     render(
       <AppShell
-        brand="Northstar UI"
+        brand="Maru Task"
         navigation={[
           { active: true, href: "/", label: "Overview" },
           { href: "/settings", label: "Settings" },
@@ -46,7 +46,7 @@ describe("AppShell", () => {
 
     render(
       <AppShell
-        brand="Northstar UI"
+        brand="Maru Task"
         navigation={[
           { href: "/", label: "Home" },
           {
