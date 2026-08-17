@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
 const defaultAuthCookieName = "jwt_token";
+const entraCallbackAliasPath = "/oauth/callback/azure-ad";
 
 function isPublicPath(pathname: string) {
   return (
@@ -49,6 +50,12 @@ function buildApiUnauthorizedResponse(requestId: string) {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  if (pathname === entraCallbackAliasPath) {
+    const callbackUrl = new URL("/api/auth/oidc/entra/callback", request.url);
+    callbackUrl.search = request.nextUrl.search;
+    return NextResponse.redirect(callbackUrl);
+  }
 
   if (isMockAuthEnabled()) return NextResponse.next();
 

@@ -6,9 +6,33 @@ import { describe, expect, it } from "vitest";
 
 import { backendApiContracts } from "./backend-api-contracts";
 
+const httpMethods = ["get", "post", "put", "patch", "delete"] as const;
+
+function normalizeBackendPath(path: string) {
+  return path.replace(/\{[^}]+\}/g, "{}").replace("/work-packages", "/work-items");
+}
+
 describe("backendApiContracts", () => {
+  it("maps every operation defined by the backend OpenAPI document", () => {
+    const openApi = JSON.parse(
+      readFileSync(new URL("../be-integrate.json", import.meta.url), "utf8"),
+    ) as { paths: Record<string, Record<string, unknown>> };
+    const openApiOperations = Object.entries(openApi.paths).flatMap(([path, operations]) =>
+      httpMethods
+        .filter((method) => method in operations)
+        .map((method) => `${method.toUpperCase()} ${normalizeBackendPath(path)}`),
+    );
+    const mappedOperations = new Set(
+      backendApiContracts.map(
+        ({ backendPath, method }) => `${method} ${normalizeBackendPath(backendPath)}`,
+      ),
+    );
+
+    expect(openApiOperations.every((operation) => mappedOperations.has(operation))).toBe(true);
+  });
+
   it("inventories every .NET controller method/path contract", () => {
-    expect(backendApiContracts).toHaveLength(73);
+    expect(backendApiContracts).toHaveLength(78);
 
     const countsByDomain = backendApiContracts.reduce<Record<string, number>>(
       (counts, contract) => ({
@@ -25,7 +49,7 @@ describe("backendApiContracts", () => {
       health: 1,
       navigation: 1,
       notifications: 3,
-      projects: 6,
+      projects: 11,
       reports: 1,
       search: 1,
       sprints: 6,
@@ -53,7 +77,7 @@ describe("backendApiContracts", () => {
       (contract) => contract.transport === "passthrough",
     );
 
-    expect(passthroughContracts).toHaveLength(51);
+    expect(passthroughContracts).toHaveLength(56);
     expect(
       passthroughContracts.every((contract) => contract.frontendPath.startsWith("/api/v1/")),
     ).toBe(true);
@@ -71,12 +95,12 @@ describe("backendApiContracts", () => {
         ).sort(([left], [right]) => left.localeCompare(right)),
       );
 
-    expect(countBy("transport")).toEqual({ passthrough: 51, specialized: 22 });
+    expect(countBy("transport")).toEqual({ passthrough: 56, specialized: 22 });
     expect(countBy("ui")).toEqual({
       "adapter-only": 3,
       infrastructure: 1,
       "live-ui": 19,
-      "no-ui": 45,
+      "no-ui": 50,
       "ui-not-integrated": 5,
     });
   });

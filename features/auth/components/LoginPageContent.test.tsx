@@ -12,12 +12,24 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace }),
   useSearchParams: () => ({ get: getNextPath }),
 }));
+vi.mock("../azure", () => ({ buildAzureSignInUrl: () => "#azure-sign-in" }));
 vi.mock("../service", () => ({ loginWithEmail: vi.fn() }));
 
 describe("LoginPageContent", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     getNextPath.mockReturnValue(null);
+  });
+
+  it("shows a loading state while Microsoft sign-in starts", async () => {
+    const user = userEvent.setup();
+
+    render(<LoginPageContent />);
+
+    await user.click(screen.getByRole("button", { name: "Sign in with Microsoft" }));
+
+    expect(screen.getByRole("button", { name: "Sign in with Microsoft" })).toBeDisabled();
+    expect(screen.getByTestId("button-loading-icon")).toBeInTheDocument();
   });
 
   it("reveals the email form only after the user selects email sign-in", async () => {

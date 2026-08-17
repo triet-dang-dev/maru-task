@@ -36,6 +36,7 @@ export function LoginPageContent() {
   });
 
   const startAzureSignIn = () => {
+    setIsSubmitting(true);
     window.location.assign(buildAzureSignInUrl());
   };
 
@@ -128,6 +129,7 @@ export function LoginPageContent() {
           ) : (
             <Stack spacing={2}>
               <Button
+                isLoading={isSubmitting}
                 onClick={startAzureSignIn}
                 startIcon={<Building2 aria-hidden="true" size={20} />}
                 sx={{ justifyContent: "flex-start", minHeight: 52 }}

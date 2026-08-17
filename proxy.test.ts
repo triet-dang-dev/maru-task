@@ -41,6 +41,19 @@ describe("auth proxy", () => {
     expect(response.status).toBe(200);
   });
 
+  it("forwards the backend's legacy Entra callback to the BFF callback", () => {
+    const response = proxy(
+      new NextRequest(
+        "http://localhost:3000/oauth/callback/azure-ad?code=opaque-code&state=opaque-state&session_state=entra-session",
+      ),
+    );
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe(
+      "http://localhost:3000/api/auth/oidc/entra/callback?code=opaque-code&state=opaque-state&session_state=entra-session",
+    );
+  });
+
   it("allows authenticated protected-page requests", () => {
     const request = new NextRequest("http://localhost:3000/projects/42", {
       headers: {

@@ -33,6 +33,8 @@ describe("NavigationShell", () => {
     expect(screen.getByText("Project workspace")).toBeInTheDocument();
     expect(screen.getAllByText("Riley Park")).not.toHaveLength(0);
     expect(screen.getByRole("heading", { name: "Work items" })).toBeInTheDocument();
+    expect(screen.getByRole("searchbox", { name: "Search work packages" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Notifications (2 unread)" })).toBeInTheDocument();
 
     const projectWorkspaceLinks = screen.getAllByRole("link", { name: "My work" });
     expect(

@@ -282,7 +282,7 @@ describe("auth BFF route", () => {
 
     const response = await GET(
       new Request(
-        "http://localhost:3000/api/auth/oidc/entra/callback?state=opaque-state&code=opaque-code",
+        "http://localhost:3000/api/auth/oidc/entra/callback?state=opaque-state&code=opaque-code&session_state=entra-session",
       ),
       { params: Promise.resolve({ action: ["oidc", "entra", "callback"] }) },
     );
@@ -292,8 +292,9 @@ describe("auth BFF route", () => {
     expect(response.headers.get("set-cookie")).toContain("jwt_token=access");
     expect(response.headers.get("set-cookie")).toContain("refresh_token=refresh");
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
-      "http://localhost:5000/auth/oidc/entra/callback?state=opaque-state&code=opaque-code",
+      "http://localhost:5000/auth/oidc/entra/callback?state=opaque-state&code=opaque-code&session_state=entra-session",
     );
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: "GET", redirect: "manual" });
   });
 
   it("rejects a non-HTTP redirect returned by the backend", async () => {

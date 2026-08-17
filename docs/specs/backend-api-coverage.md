@@ -8,13 +8,13 @@ This is the exhaustive comparison between the API implemented by `.NET` and the 
 
 ## Coverage summary
 
-- 73 backend method/path contracts across 15 frontend domains.
+- 78 backend method/path contracts across 15 frontend domains.
 - 22 contracts use specialized BFF adapters that validate or transform data for current UI flows.
-- 51 contracts use the allowlisted catch-all BFF transport at `app/api/v1/[...path]/route.ts`.
+- 56 contracts use the allowlisted catch-all BFF transport at `app/api/v1/[...path]/route.ts`.
 - 19 contracts are used by live UI.
 - 3 contracts are adapter-only; two are intentionally background/session operations.
 - 5 contracts have an existing UI surface that is not yet connected to the backend endpoint.
-- 45 contracts have no UI yet.
+- 50 contracts have no UI yet.
 - 1 contract is infrastructure-only and should not have product UI.
 
 Browser code must call the same-origin frontend paths below. The catch-all BFF is not an open proxy: method and path must match the explicit contract registry, numeric IDs must be positive, cookies stay HTTP-only, and authorization remains authoritative in `.NET`.
@@ -92,6 +92,11 @@ See `auth-session-integration.md` for cookie, Entra, and refresh constraints.
 
 - `projects.list` — `GET /projects` → `GET /api/v1/projects`; `CanWriteSystem`; specialized; `live-ui`. Policy currently means Admin-only even though the page is part of the main navigation.
 - `projects.detail` — `GET /projects/{projectId}` → `GET /api/v1/projects/{projectId}`; `CanRead`; specialized; `live-ui`.
+- `projects.documents.upload-url` — `POST /projects/{projectId}/documents/upload-url` → same path below `/api/v1`; `CanWriteProject`; passthrough; `no-ui`.
+- `projects.documents.create` — `POST /projects/{projectId}/documents` → same path below `/api/v1`; `CanWriteProject`; passthrough; `no-ui`.
+- `projects.documents.list` — `GET /projects/{projectId}/documents` → same path below `/api/v1`; `CanRead`; passthrough; `no-ui`.
+- `projects.documents.detail` — `GET /projects/{projectId}/documents/{documentId}` → same path below `/api/v1`; `CanRead`; passthrough; `no-ui`.
+- `projects.documents.delete` — `DELETE /projects/{projectId}/documents/{documentId}` → same path below `/api/v1`; `CanWriteProject`; passthrough; `no-ui`.
 - `projects.members.list` — `GET /projects/{projectId}/members` → same path below `/api/v1`; `CanWriteProject`; passthrough; `no-ui`.
 - `projects.members.add` — `POST /projects/{projectId}/members` → same path below `/api/v1`; `CanWriteProject`; passthrough; `no-ui`.
 - `projects.members.update` — `PATCH /projects/{projectId}/members/{userId}` → same path below `/api/v1`; `CanWriteProject`; passthrough; `no-ui`.

@@ -20,8 +20,37 @@ import { useState, type ReactNode } from "react";
 import { AppShell, type AppShellNavigationItem } from "@/components/layout/AppShell";
 import { SessionGate } from "@/features/auth/components/SessionGate";
 import { logout, type BrowserSession } from "@/features/auth/service";
+import {
+  NotificationCenter,
+  type NotificationItem,
+} from "@/features/notifications/components/NotificationCenter";
+import { GlobalSearch } from "@/features/search/components/GlobalSearch";
 
 const iconProps = { size: 18, strokeWidth: 1.8 };
+
+const placeholderNotifications: NotificationItem[] = [
+  {
+    actor: "Dana Chen",
+    id: "notification-1",
+    message: "mentioned you in Review the release checklist",
+    read: false,
+    timestamp: "18 minutes ago",
+  },
+  {
+    actor: "Morgan Tate",
+    id: "notification-2",
+    message: "assigned you WP-138",
+    read: false,
+    timestamp: "Yesterday",
+  },
+  {
+    actor: "Riley Park",
+    id: "notification-3",
+    message: "updated WP-131",
+    read: true,
+    timestamp: "Monday",
+  },
+];
 
 function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
@@ -151,6 +180,8 @@ function AuthenticatedNavigationShell({
     <AppShell
       actions={
         <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <GlobalSearch />
+          <NotificationCenter notifications={placeholderNotifications} />
           <Avatar
             aria-label={session.displayName}
             sx={{ bgcolor: "primary.main", height: 32, width: 32 }}

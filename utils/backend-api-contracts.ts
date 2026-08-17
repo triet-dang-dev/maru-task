@@ -396,6 +396,66 @@ const contractTuples = [
     "live-ui",
   ],
   [
+    "projects.documents.upload-url",
+    "projects",
+    "POST",
+    "/api/v1/projects/{projectId}/documents/upload-url",
+    "/projects/{projectId}/documents/upload-url",
+    "CanWriteProject",
+    "CreateProjectDocumentUploadUrlRequest",
+    "ProjectDocumentUploadUrlResponse",
+    "passthrough",
+    "no-ui",
+  ],
+  [
+    "projects.documents.create",
+    "projects",
+    "POST",
+    "/api/v1/projects/{projectId}/documents",
+    "/projects/{projectId}/documents",
+    "CanWriteProject",
+    "LinkProjectDocumentRequest",
+    "ProjectDocumentResponse",
+    "passthrough",
+    "no-ui",
+  ],
+  [
+    "projects.documents.list",
+    "projects",
+    "GET",
+    "/api/v1/projects/{projectId}/documents",
+    "/projects/{projectId}/documents",
+    "CanRead",
+    "GetProjectDocumentsQuery",
+    "PagedProjectDocumentResponse",
+    "passthrough",
+    "no-ui",
+  ],
+  [
+    "projects.documents.detail",
+    "projects",
+    "GET",
+    "/api/v1/projects/{projectId}/documents/{documentId}",
+    "/projects/{projectId}/documents/{documentId}",
+    "CanRead",
+    "Path IDs",
+    "ProjectDocumentResponse",
+    "passthrough",
+    "no-ui",
+  ],
+  [
+    "projects.documents.delete",
+    "projects",
+    "DELETE",
+    "/api/v1/projects/{projectId}/documents/{documentId}",
+    "/projects/{projectId}/documents/{documentId}",
+    "CanWriteProject",
+    "Path IDs",
+    "ProjectDocumentResponse",
+    "passthrough",
+    "no-ui",
+  ],
+  [
     "projects.members.list",
     "projects",
     "GET",
@@ -956,6 +1016,12 @@ const contractTuples = [
     "no-ui",
   ],
 ] as const satisfies readonly ContractTuple[];
+
+export type BackendApiContractId = (typeof contractTuples)[number][0];
+export type BackendApiContractIdForDomain<Domain extends BackendApiDomain> = Extract<
+  (typeof contractTuples)[number],
+  readonly [string, Domain, ...unknown[]]
+>[0];
 
 export const backendApiContracts: readonly BackendApiContract[] = contractTuples.map(
   ([
