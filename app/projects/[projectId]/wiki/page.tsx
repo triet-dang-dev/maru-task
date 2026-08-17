@@ -1,6 +1,5 @@
 import { PageContainer } from "@/components/layout";
 import { ProjectWikiWorkspace } from "@/features/projects/components/ProjectWikiWorkspace";
-import { ProjectWorkspaceNavigation } from "@/features/projects/components/ProjectWorkspaceNavigation";
 
 export default async function ProjectWikiPage({
   params,
@@ -10,8 +9,7 @@ export default async function ProjectWikiPage({
   const { projectId } = await params;
   return (
     <PageContainer>
-      <ProjectWorkspaceNavigation projectId={projectId} />
-      <ProjectWikiWorkspace />
+      <ProjectWikiWorkspace projectId={projectId} />
     </PageContainer>
   );
 }

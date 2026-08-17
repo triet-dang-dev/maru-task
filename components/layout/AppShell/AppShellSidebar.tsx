@@ -45,13 +45,18 @@ function Navigation({
             selected={item.active}
             sx={{
               border: "1px solid transparent",
-              borderRadius: 1,
+              borderLeft: item.active ? "4px solid" : "4px solid transparent",
+              borderLeftColor: item.active ? "primary.main" : "transparent",
+              borderRadius: "0 4px 4px 0",
               minHeight: 36,
-              px: 3,
+              px: 2.5,
               "&.Mui-selected": {
                 bgcolor: "action.selected",
                 color: "primary.dark",
                 "& .MuiListItemIcon-root": { color: "primary.dark" },
+              },
+              "&:hover": {
+                bgcolor: "action.hover",
               },
             }}
           >
@@ -101,31 +106,33 @@ function SubmenuPane({
     <Box
       aria-label={`${submenu.title} menu`}
       component="nav"
-      sx={{ display: "flex", flexDirection: "column", height: "100%" }}
+      sx={{ display: "flex", flexDirection: "column", flex: 1, overflow: "hidden" }}
     >
-      <Box sx={{ alignItems: "center", display: "flex", gap: 1, minHeight: 55, px: 3 }}>
+      <Box sx={{ alignItems: "center", display: "flex", gap: 1, minHeight: 48, px: 3, pt: 1 }}>
         <IconButton aria-label="Back to main menu" onClick={onBack} size="small">
           <ChevronLeft aria-hidden="true" size={20} strokeWidth={1.8} />
         </IconButton>
-        <Typography component="h2" variant="body2">
+        <Typography component="h2" sx={{ fontWeight: 700 }} variant="body2">
           {submenu.title}
         </Typography>
       </Box>
       <Divider />
-      <Box sx={{ overflowY: "auto", px: 3, py: 3 }}>
+      <Box sx={{ flex: 1, overflowY: "auto", px: 3, py: 2 }}>
         {submenu.searchPlaceholder ? (
-          <TextField
-            aria-label={submenu.searchPlaceholder}
-            fullWidth
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder={submenu.searchPlaceholder}
-            size="small"
-            slotProps={{
-              htmlInput: { "aria-label": submenu.searchPlaceholder },
-              input: { startAdornment: <Search aria-hidden="true" size={17} strokeWidth={1.8} /> },
-            }}
-            value={search}
-          />
+          <Box sx={{ mb: 2, px: 1, pt: 1 }}>
+            <TextField
+              aria-label={submenu.searchPlaceholder}
+              fullWidth
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={submenu.searchPlaceholder}
+              size="small"
+              slotProps={{
+                htmlInput: { "aria-label": submenu.searchPlaceholder },
+                input: { startAdornment: <Search aria-hidden="true" size={17} strokeWidth={1.8} /> },
+              }}
+              value={search}
+            />
+          </Box>
         ) : null}
         <Navigation items={mainItems} label={`${submenu.title} views`} onNavigate={onNavigate} />
         {sections?.map((section) => (
@@ -156,14 +163,9 @@ export function AppShellSidebar({
 }) {
   const [submenu, setSubmenu] = useState<AppShellNavigationSubmenu | null>(null);
 
-  if (submenu) {
-    return (
-      <SubmenuPane onBack={() => setSubmenu(null)} onNavigate={onNavigate} submenu={submenu} />
-    );
-  }
-
   return (
     <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Brand Header: Always visible */}
       <Box sx={{ alignItems: "center", display: "flex", gap: 2, minHeight: 55, px: 3 }}>
         <Box
           aria-hidden="true"
@@ -193,24 +195,32 @@ export function AppShellSidebar({
         ) : null}
       </Box>
       <Divider />
-      <Navigation
-        items={navigation}
-        label="Primary navigation"
-        onNavigate={onNavigate}
-        onOpenSubmenu={setSubmenu}
-      />
-      {projectNavigation && projectNavigation.length > 0 ? (
-        <>
-          <Divider />
+
+      {submenu ? (
+        <SubmenuPane onBack={() => setSubmenu(null)} onNavigate={onNavigate} submenu={submenu} />
+      ) : (
+        <Box sx={{ flex: 1, overflowY: "auto" }}>
           <Navigation
-            items={projectNavigation}
-            label="Project navigation"
+            items={navigation}
+            label="Primary navigation"
             onNavigate={onNavigate}
-            title="Project"
+            onOpenSubmenu={setSubmenu}
           />
-        </>
-      ) : null}
-      {sidebarFooter ? (
+          {projectNavigation && projectNavigation.length > 0 ? (
+            <>
+              <Divider />
+              <Navigation
+                items={projectNavigation}
+                label="Project navigation"
+                onNavigate={onNavigate}
+                title="Project"
+              />
+            </>
+          ) : null}
+        </Box>
+      )}
+
+      {sidebarFooter && !submenu ? (
         <Box sx={{ borderTop: 1, borderColor: "divider", mt: "auto", p: 4 }}>{sidebarFooter}</Box>
       ) : null}
     </Box>

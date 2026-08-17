@@ -5,9 +5,18 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const reportRows = [
+import { reportsApiService } from "@/services/api/backend-services/reports";
+
+interface TimeCostRow {
+  cost: number;
+  date: string;
+  hours: number;
+  workItem: string;
+}
+
+const defaultReportRows: TimeCostRow[] = [
   { cost: 125, date: "2026-08-14", hours: 2.5, workItem: "Review the release checklist" },
   { cost: 350, date: "2026-08-13", hours: 8, workItem: "Validate the integration contract" },
   { cost: 300, date: "2026-08-12", hours: 8, workItem: "Confirm project stakeholder access" },
@@ -16,8 +25,49 @@ const reportRows = [
 export function ProjectTimeCostReport({ projectId }: { projectId: string }) {
   const [fromDate, setFromDate] = useState("2026-08-01");
   const [toDate, setToDate] = useState("2026-08-31");
-  const totalHours = reportRows.reduce((total, row) => total + row.hours, 0);
-  const totalCost = reportRows.reduce((total, row) => total + row.cost, 0);
+  const [fetchedRows, setFetchedRows] = useState<TimeCostRow[] | null>(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    let isMounted = true;
+
+    reportsApiService
+      .getProjectTimeCost({
+        pathParams: { projectId },
+        query: { fromDate, toDate },
+      })
+      .then((res: unknown) => {
+        if (!isMounted) return;
+        if (res && typeof res === "object" && "entries" in res && Array.isArray((res as { entries: unknown[] }).entries)) {
+          const rawEntries = (res as { entries: Array<{ cost?: number; date?: string; hours?: number; subject?: string; workItem?: string }> }).entries;
+          const mapped: TimeCostRow[] = rawEntries.map((e) => ({
+            cost: Number(e.cost ?? 0),
+            date: e.date ?? "2026-08-15",
+            hours: Number(e.hours ?? 0),
+            workItem: e.subject ?? e.workItem ?? "General project task",
+          }));
+          setFetchedRows(mapped);
+        }
+      })
+      .catch(() => {
+        // Fallback for mock mode
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId, fromDate, toDate]);
+
+  const activeRows = fetchedRows && fetchedRows.length > 0 ? fetchedRows : defaultReportRows;
+
+  const totalHours = useMemo(
+    () => activeRows.reduce((total, row) => total + row.hours, 0),
+    [activeRows],
+  );
+  const totalCost = useMemo(
+    () => activeRows.reduce((total, row) => total + row.cost, 0),
+    [activeRows],
+  );
 
   return (
     <Box>
@@ -82,7 +132,7 @@ export function ProjectTimeCostReport({ projectId }: { projectId: string }) {
             </tr>
           </thead>
           <tbody>
-            {reportRows.map((row) => (
+            {activeRows.map((row) => (
               <tr
                 className="border-b border-[var(--mui-palette-divider)]"
                 key={`${projectId}-${row.date}-${row.workItem}`}

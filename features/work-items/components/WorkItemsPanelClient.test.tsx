@@ -266,4 +266,74 @@ describe("WorkItemsPanelClient", () => {
     expect(await screen.findByText("Please enter a work item title.")).toBeInTheDocument();
     expect(createWorkItem).not.toHaveBeenCalled();
   });
+
+  it("switches to card view mode and renders OpenProject-style cards", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <WorkItemsPanelClient
+        data={{
+          hasItems: true,
+          items: [
+            {
+              id: "1",
+              projectId: "demo-project",
+              status: "Open",
+              subject: "Prepare release notes",
+              updatedAt: "Today",
+            },
+          ],
+          page: 1,
+          pageSize: 20,
+          total: 1,
+        }}
+        onRefresh={vi.fn().mockResolvedValue(undefined)}
+        projectId="demo-project"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Card view" }));
+
+    expect(screen.getByRole("region", { name: "Work packages card view" })).toBeInTheDocument();
+    expect(screen.getByRole("article", { name: "Card #1: Prepare release notes" })).toBeInTheDocument();
+    expect(screen.getByText("TASK")).toBeInTheDocument();
+  });
+
+  it("creates a work package via the inline create affordance", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(createWorkItem).mockResolvedValue(undefined);
+
+    render(
+      <WorkItemsPanelClient
+        data={{
+          hasItems: true,
+          items: [
+            {
+              id: "1",
+              projectId: "demo-project",
+              status: "Open",
+              subject: "Prepare release notes",
+              updatedAt: "Today",
+            },
+          ],
+          page: 1,
+          pageSize: 20,
+          total: 1,
+        }}
+        onRefresh={onRefresh}
+        projectId="demo-project"
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Create new work package" }));
+    const inlineInput = screen.getByLabelText("Inline work package title");
+    await user.type(inlineInput, "Inline subject{Enter}");
+
+    await waitFor(() => {
+      expect(createWorkItem).toHaveBeenCalledWith({ projectId: "demo-project", title: "Inline subject" });
+      expect(onRefresh).toHaveBeenCalled();
+    });
+  });
 });
+

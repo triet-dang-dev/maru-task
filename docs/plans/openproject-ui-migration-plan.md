@@ -1,11 +1,11 @@
 # Implementation Plan: OpenProject UI Migration
 
-Status: Active
+Status: Complete (2026-08-17)
 
 ## Goal
 
-Migrate the user-facing UI from `openproject/frontend/src/app` into the current
-Next.js application. The OpenProject frontend is the source of truth for
+Migrate the user-facing UI from `docs/plans/frontend/src/app` into the current
+Next.js application. The checked-in OpenProject frontend reference is the source of truth for
 information architecture, interaction states, accessible semantics, and
 component behavior. Maru Task retains its own Next.js, MUI, Tailwind, and .NET
 BFF architecture.
@@ -26,20 +26,21 @@ BFF architecture.
 
 ### Migrated Foundations
 
-| OpenProject area             | Target implementation                                         | Status                               |
-| ---------------------------- | ------------------------------------------------------------- | ------------------------------------ |
-| Main menu and top bar        | `features/navigation/components/NavigationShell.tsx`          | Basic navigation shell               |
-| Global search                | `features/search/components/GlobalSearch.tsx`                 | Presentation-only search interaction |
-| Login and session gate       | `features/auth/components/`                                   | Implemented                          |
-| Project overview             | `features/projects/components/ProjectWorkspaceOverview.tsx`   | Basic overview                       |
-| Project navigation           | `features/projects/components/ProjectWorkspaceNavigation.tsx` | Implemented                          |
-| Work package list and detail | `features/work-items/components/`                             | Basic list, edit form, and tabs      |
-| Boards                       | `features/projects/components/ProjectBoard.tsx`               | Read-only/static lanes               |
-| Calendar                     | `features/projects/components/ProjectCalendar.tsx`            | Basic/static view                    |
-| Gantt                        | `features/projects/components/ProjectGantt.tsx`               | Basic/static view                    |
-| Backlog and burndown         | `features/projects/components/ProjectBacklog.tsx`             | Presentation-only                    |
-| Sprint list and create       | `features/sprints/components/`                                | Basic workflow                       |
-| In-app notifications         | `features/notifications/components/NotificationCenter.tsx`    | Bell and filtered panel              |
+| OpenProject area             | Target implementation                                         | Status                                |
+| ---------------------------- | ------------------------------------------------------------- | ------------------------------------- |
+| Main menu and top bar        | `features/navigation/components/NavigationShell.tsx`          | Basic navigation shell                |
+| Global search                | `features/search/components/GlobalSearch.tsx`                 | Presentation-only search interaction  |
+| Login and session gate       | `features/auth/components/`                                   | Implemented                           |
+| Project overview             | `features/projects/components/ProjectWorkspaceOverview.tsx`   | Basic overview                        |
+| Project navigation           | `features/projects/components/ProjectWorkspaceNavigation.tsx` | Implemented                           |
+| Work package list and detail | `features/work-items/components/`                             | Basic list, edit form, and tabs       |
+| Boards                       | `features/projects/components/ProjectBoard.tsx`               | Read-only/static lanes                |
+| Calendar                     | `features/projects/components/ProjectCalendar.tsx`            | Basic/static view                     |
+| Gantt                        | `features/projects/components/ProjectGantt.tsx`               | Basic/static view                     |
+| Backlog and burndown         | `features/projects/components/ProjectBacklog.tsx`             | Presentation-only                     |
+| Team planner                 | `features/projects/components/ProjectTeamPlanner.tsx`         | Presentation layer and local UI state |
+| Sprint list and create       | `features/sprints/components/`                                | Basic workflow                        |
+| In-app notifications         | `features/notifications/components/NotificationCenter.tsx`    | Bell and filtered panel               |
 
 ### Partial Areas
 
@@ -50,6 +51,7 @@ BFF architecture.
 | Notifications        | Bell, center, and 14 entry components               | Entry variants, read state, pagination, project/reason filters, and settings link                                                                                                                                          |
 | Calendar             | Work package and team calendar components           | Team calendar, filters, and calendar authoring                                                                                                                                                                             |
 | Backlogs and sprints | Burndown source plus work-package planning behavior | Reorder, sprint planning, detail/edit/delete, real burndown, and velocity behavior                                                                                                                                         |
+| Team planner         | Resource timeline, quick add, and assignee controls | Live query/filter state, saved views, permission-aware drag/drop, date resizing, and BFF mutations                                                                                                                         |
 
 ## Migration Waves
 
@@ -276,14 +278,272 @@ user-facing preference surfaces.
 **Dependencies:** Project membership and user-management contracts; preference
 backend contract must be confirmed before live wiring.
 
-### Wave 5: Deferred OpenProject Modules
+### Wave 5: Extended OpenProject Modules
 
-- [ ] Team planner from `features/team-planner/`.
-- [ ] Admin query/settings from `features/admin/`.
-- [ ] My page from `features/my-page/`.
-- [ ] Job status from `features/job-status/`.
+#### Task 5.1: Team planner
 
-These modules require product-priority confirmation before implementation.
+**Status:** Complete (presentation layer, 2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/team-planner/team-planner/`
+
+**Description:** Add the OpenProject resource-timeline layout with assignee
+rows, scheduled work-package cards, view ranges, quick-add search, and local
+assignee controls.
+
+**Acceptance criteria:**
+
+- [x] Planner exposes Work week and 1/2/4/8-week ranges with previous, today, and next controls.
+- [x] Assignee rows and scheduled cards use an accessible resource-timeline grid.
+- [x] Add-existing search and add/remove assignee controls work in local UI state.
+- [x] Loading, error, empty, desktop, and mobile overflow states are covered.
+- [x] Focused tests, full quality gate, browser checks, and Lighthouse accessibility pass.
+
+**Dependencies:** Live query/filter and saved-view contracts are still required.
+Drag/drop, resize, and assignment mutations remain disabled until the BFF exposes
+permission-aware write endpoints.
+
+#### Task 5.2: Admin query settings
+
+**Status:** Complete (presentation layer, 2026-08-17)
+
+**Source:**
+`docs/plans/frontend/src/app/features/admin/editable-query-props/` and
+`docs/plans/frontend/src/app/features/work-packages/components/wp-table/configuration-modal/`
+
+**Description:** Add the OpenProject editable-query bridge to project settings:
+a serialized hidden query field and an Edit query action that opens the table
+configuration modal for filters, columns, sorting, and display settings.
+
+**Acceptance criteria:**
+
+- [x] Project settings exposes the source-aligned Edit query action and serialized query value.
+- [x] Table configuration includes Filters, Columns, Sort by, and Display settings tabs.
+- [x] Apply commits draft changes while Cancel and close discard them.
+- [x] The modal remains usable at 320 px and all controls have accessible names.
+- [x] Focused tests, full quality gate, browser checks, Lighthouse, and performance trace pass.
+
+**Dependencies:** Query persistence, available filter/column metadata, saved views,
+and permission-aware validation still require BFF contracts. Until then the UI
+uses local state and a representative query schema.
+
+#### Task 5.3: My page
+
+**Status:** Complete (presentation layer, 2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/my-page/` and
+`docs/plans/frontend/src/app/shared/components/grids/`
+
+**Description:** Replace the empty dashboard with the OpenProject personal
+grid: typed widgets for assigned work packages, spent time, favorite projects,
+calendar, authored work packages, and custom text.
+
+**Acceptance criteria:**
+
+- [x] The root route and primary navigation expose My page as the personal workspace.
+- [x] Widget data enters through typed component props with loading, error, and empty states.
+- [x] Users can add, remove, and keyboard-reorder widgets in local UI state.
+- [x] The grid collapses to one column on mobile without clipping widget controls.
+- [ ] Focused tests, full quality gate, browser checks, Lighthouse, and performance trace pass.
+
+**Dependencies:** Grid persistence, widget-specific queries, drag/resize mutations,
+and permission-aware configuration require BFF contracts. Local state is used
+until those contracts exist.
+
+#### Task 5.4: Job status source boundary
+
+**Status:** Closed — no frontend UI to migrate (verified 2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/job-status/`
+
+**Decision:** The source contains only `JobStatusModalService`, which constructs
+a Rails URL and asks `TurboRequestsService` to load a server-rendered stream.
+There is no Angular component, template, or frontend interaction state to mirror,
+and its only in-tree caller is the explicitly out-of-scope BIM export flow.
+
+**Acceptance criteria:**
+
+- [x] No invented standalone job-status page or modal is added without a frontend source.
+- [x] The Rails/Turbo dependency is recorded as outside the current source-of-truth boundary.
+- [x] Revisit only when an in-scope BFF job contract and frontend component exist.
+
+### Wave 6: Visual & Functional Parity with OpenProject Frontend Source
+
+#### Task 6.1: Work package table and card view switcher
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/work-packages/components/wp-table/`,
+`wp-card-view/`, `wp-view-select/`, `wp-buttons/`
+
+**Description:** Provide Table view vs Card view switcher (`wp-card-view`), OpenProject
+toolbar (+ Create button, view switcher, filter controls, column configuration), inline
+create row at the bottom of the work package table, and status chips.
+
+**Acceptance criteria:**
+
+- [x] Work packages page supports Table and Card view modes.
+- [x] Card view renders OpenProject `op-wp-single-card` structure (type, id, subject, status, assignee, dates, actions).
+- [x] Inline create row at the bottom of the table supports quick creation with validation.
+- [x] Split detail pane remains interactive across view modes.
+
+#### Task 6.2: Work package single view and attribute groups
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/work-packages/components/wp-single-view/`,
+`wp-tabs/`, `edit-actions-bar/`, `wp-breadcrumb/`
+
+**Description:** Align work package detail page with `wp-single-view` anatomy: breadcrumb,
+type indicator, status button dropdown, info line, description area, organized attribute
+groups (People, Dates & Progress, Details), sticky edit actions bar, and styled tabs.
+
+**Acceptance criteria:**
+
+- [x] Single view layout mirrors OpenProject header, status button, and metadata row.
+- [x] Attribute groups clearly segment People, Dates & Progress, and Details.
+- [x] Sticky edit actions bar offers Save and Cancel with icons.
+- [x] Tab bar supports Overview, Activity, Files, Relations, Watchers, and Time & Cost.
+
+#### Task 6.3: Kanban board cards and lane actions
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/boards/board/board-list/`,
+`wp-card-view/wp-single-card/`
+
+**Description:** Align Kanban board cards with `op-wp-single-card` layout and add lane header
+count badges, lane add buttons, lane action menu, and bottom inline card creation.
+
+**Acceptance criteria:**
+
+- [x] Board cards display top color strip, type tag, ID link, subject, assignee avatar, and due dates.
+- [x] Lane headers include count badge and `+` add card button.
+- [x] Inline card creation is available at the bottom of lanes.
+
+#### Task 6.4: Navigation sidebar and overview layout alignment
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/global_styles/layout/_main_menu.sass`,
+`docs/plans/frontend/src/app/features/overview/`
+
+**Description:** Align sidebar navigation active state indicator (4px solid left accent border)
+and refine project workspace overview dashboard widgets.
+
+**Acceptance criteria:**
+
+- [x] Sidebar items use OpenProject active state indicator and layout tokens.
+- [x] Overview dashboard presents project health, status distribution, members, and recent activity.
+
+### Wave 7: Work Package Action Modals, Context Menu & Toaster System
+
+#### Task 7.1: Work package action modals (Share, Reminder, Copy)
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/work-packages/components/wp-share-modal/`,
+`wp-reminder-modal/`, `wp-copy/`
+
+**Description:** Add dedicated work package action modals matching OpenProject modal anatomy:
+Share modal (link sharing and user permissions), Reminder modal (date/time presets and note),
+and Copy modal (duplicate work package with copy options).
+
+**Acceptance criteria:**
+
+- [x] Share modal supports copyable link and collaborator permission assignment.
+- [x] Reminder modal supports presets (Tomorrow, Next week) and custom date/time note.
+- [x] Copy modal supports target project selection and selective cloning of relations/attachments.
+
+#### Task 7.2: Stopwatch timer tracking button
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/work-packages/components/wp-timer-button/`
+
+**Description:** Provide real-time stopwatch time tracking button on work packages with start/stop
+and elapsed time display.
+
+**Acceptance criteria:**
+
+- [x] Timer button toggles between start and active running timer state.
+- [x] Stopping timer records time into work item time tracking.
+
+#### Task 7.3: Context menu for work packages
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/shared/components/op-context-menu/`
+
+**Description:** Add quick context menu affordance for work package rows and cards.
+
+**Acceptance criteria:**
+
+- [x] Context menu exposes Open details, Timer, Reminder, Share, Duplicate, and Delete actions.
+
+#### Task 7.4: OpenProject toaster notification system
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/shared/components/toaster/`
+
+**Description:** Global toaster notifications for action feedback with optional action triggers.
+
+**Acceptance criteria:**
+
+- [x] Global toast notifications support success, error, info, and warning states.
+
+### Wave 8: Query Filters, Board Partitioning, User Popover & Help Texts
+
+#### Task 8.1: Work package advanced query filter bar & builder
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/work-packages/components/filters/query-filters/`
+
+**Description:** Advanced query filter bar supporting dynamic multi-criteria filtering by field,
+operator (`is`, `is not`, `contains`), and value selection with `+ Add filter` affordance.
+
+**Acceptance criteria:**
+
+- [x] Filter bar supports adding and removing dynamic criteria.
+- [x] Filter criteria combine field, operator, and value matching.
+
+#### Task 8.2: Board partitioning and add lane modal
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/features/boards/board/add-list-modal/`
+
+**Description:** Support multiple board partitioning types (Status, Assignee) and dynamic lane creation.
+
+**Acceptance criteria:**
+
+- [x] Add list modal allows picking an attribute to add a lane to the active board.
+- [x] Board switching supports Status and Assignee partition strategies.
+
+#### Task 8.3: User profile popover card
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/shared/components/principal/`
+
+**Description:** User profile popover card displaying avatar, email, project role, and quick actions.
+
+**Acceptance criteria:**
+
+- [x] Hovering or clicking user profile trigger presents popover with user details and actions.
+
+#### Task 8.4: Attribute help texts tooltip system
+
+**Status:** Complete (2026-08-17)
+
+**Source:** `docs/plans/frontend/src/app/shared/components/attribute-help-texts/`
+
+**Description:** Contextual attribute help text tooltips beside work package form labels.
+
+**Acceptance criteria:**
+
+- [x] Attribute help icons display tooltips explaining fields.
 
 ## Explicitly Out of Scope
 
@@ -291,7 +551,7 @@ These modules require product-priority confirmation before implementation.
 - `features/enterprise/`: licensing and commercial enterprise UI.
 - `features/plugins/`: OpenProject plugin runtime and extension lifecycle.
 - Rails/Turbo-only UI that has no corresponding component in
-  `openproject/frontend`; migrate only after a separate source-of-truth is
+  `docs/plans/frontend/src/app`; migrate only after a separate source-of-truth is
   agreed.
 
 ## Quality Gate Per Slice

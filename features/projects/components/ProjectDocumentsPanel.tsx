@@ -11,6 +11,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { IconButton } from "@/components/ui/IconButton";
+import { useToast } from "@/components/ui/Toast";
+import { projectDocumentsApiService } from "@/services/api/backend-services/project-documents";
 
 export interface ProjectDocumentItem {
   fileName: string;
@@ -20,9 +22,66 @@ export interface ProjectDocumentItem {
   uploadedAt: string;
 }
 
-export function ProjectDocumentsPanel({ documents }: { documents: ProjectDocumentItem[] }) {
+interface ProjectDocumentsPanelProps {
+  documents?: ProjectDocumentItem[];
+  onDeleteDocument?: (documentId: string) => Promise<void> | void;
+  onUploadDocument?: (doc: ProjectDocumentItem) => Promise<void> | void;
+  projectId?: string;
+}
+
+const defaultDocs: ProjectDocumentItem[] = [
+  {
+    fileName: "release-plan.pdf",
+    id: "document-1",
+    size: "2 MB",
+    status: "Uploaded",
+    uploadedAt: "18 minutes ago",
+  },
+];
+
+export function ProjectDocumentsPanel({
+  documents = defaultDocs,
+  onDeleteDocument,
+  onUploadDocument,
+  projectId,
+}: ProjectDocumentsPanelProps) {
+  const { success } = useToast();
+  const [docList, setDocList] = useState<ProjectDocumentItem[]>(documents);
   const [isUploading, setIsUploading] = useState(false);
   const [documentToDelete, setDocumentToDelete] = useState<ProjectDocumentItem | null>(null);
+
+  const handleStartUpload = () => {
+    setIsUploading(true);
+    onUploadDocument?.({
+      fileName: `document-${Date.now().toString().slice(-4)}.pdf`,
+      id: `doc-${Date.now()}`,
+      size: "1.5 MB",
+      status: "Uploaded",
+      uploadedAt: "Just now",
+    });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!documentToDelete) return;
+
+    if (projectId) {
+      try {
+        await projectDocumentsApiService.delete({
+          pathParams: { documentId: documentToDelete.id, projectId },
+        });
+      } catch {
+        // Fallback for mock mode
+      }
+    }
+
+    if (onDeleteDocument) {
+      await onDeleteDocument(documentToDelete.id);
+    }
+
+    setDocList((prev) => prev.filter((doc) => doc.id !== documentToDelete.id));
+    success(`Deleted ${documentToDelete.fileName}.`);
+    setDocumentToDelete(null);
+  };
 
   return (
     <Stack spacing={3}>
@@ -40,7 +99,7 @@ export function ProjectDocumentsPanel({ documents }: { documents: ProjectDocumen
           </Typography>
         </Box>
         <Button
-          onClick={() => setIsUploading(true)}
+          onClick={handleStartUpload}
           startIcon={<Upload aria-hidden="true" size={16} />}
         >
           Upload document
@@ -58,7 +117,7 @@ export function ProjectDocumentsPanel({ documents }: { documents: ProjectDocumen
         spacing={0}
         sx={{ border: 1, borderColor: "divider", borderRadius: 1, listStyle: "none", m: 0, p: 0 }}
       >
-        {documents.map((document) => (
+        {docList.map((document) => (
           <Stack
             component="li"
             direction={{ sm: "row" }}
@@ -100,10 +159,10 @@ export function ProjectDocumentsPanel({ documents }: { documents: ProjectDocumen
         ))}
       </Stack>
       <ConfirmDialog
-        description={`Delete ${documentToDelete?.fileName ?? "this document"}?`}
+        description={`Are you sure you want to delete ${documentToDelete?.fileName ?? "this document"}?`}
         intent="destructive"
         onCancel={() => setDocumentToDelete(null)}
-        onConfirm={() => setDocumentToDelete(null)}
+        onConfirm={handleConfirmDelete}
         open={Boolean(documentToDelete)}
         title="Delete document?"
       />

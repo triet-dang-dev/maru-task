@@ -1,9 +1,10 @@
-import { PageContainer, PageHeader } from "@/components/layout";
+import { PageContainer } from "@/components/layout";
+import { MyPageDashboard } from "@/features/my-page/components/MyPageDashboard";
 
 export default function HomePage() {
   return (
     <PageContainer>
-      <PageHeader description="Dashboard" title="Dashboard" />
+      <MyPageDashboard />
     </PageContainer>
   );
 }

@@ -8,12 +8,11 @@ vi.mock("@/features/projects/components/ProjectGantt", () => ({
 import ProjectGanttPage from "./page";
 
 describe("ProjectGanttPage", () => {
-  it("renders the project Gantt workspace with active navigation", async () => {
+  it("renders the project Gantt workspace", async () => {
     const page = await ProjectGanttPage({ params: Promise.resolve({ projectId: "proj-1" }) });
 
     render(page);
 
-    expect(screen.getByRole("link", { name: "Gantt" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("Gantt for proj-1")).toBeInTheDocument();
   });
 });

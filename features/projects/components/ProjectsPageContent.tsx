@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { EmptyState } from "@/components/common/EmptyState";
@@ -41,9 +42,13 @@ const columns: Array<ColumnDef<ProjectListItem>> = [
 ];
 
 export function ProjectsPageContent() {
+  const searchParams = useSearchParams();
   const [data, setData] = useState<ProjectsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const statusFilter = searchParams.get("status")?.toLowerCase();
+  const viewFilter = searchParams.get("view")?.toLowerCase();
 
   const load = useCallback(async () => {
     try {
@@ -63,6 +68,20 @@ export function ProjectsPageContent() {
     })();
   }, [load]);
 
+  const items = data?.items;
+  const filteredItems = useMemo(() => {
+    if (!items) return [];
+    return items.filter((item) => {
+      if (statusFilter && !item.status.toLowerCase().includes(statusFilter.replace(/-/g, " "))) {
+        return false;
+      }
+      if (viewFilter === "archived" && item.status.toLowerCase() !== "archived") {
+        return false;
+      }
+      return true;
+    });
+  }, [items, statusFilter, viewFilter]);
+
   if (isLoading) return <LoadingState label="Loading projects" />;
 
   if (error) {
@@ -73,10 +92,14 @@ export function ProjectsPageContent() {
     );
   }
 
-  if (!data || data.items.length === 0) {
+  if (!data || filteredItems.length === 0) {
     return (
       <EmptyState
-        description="No projects are available for your current account."
+        description={
+          statusFilter || viewFilter
+            ? `No projects found matching the selected filter.`
+            : "No projects are available for your current account."
+        }
         title="No projects found"
       />
     );
@@ -85,7 +108,7 @@ export function ProjectsPageContent() {
   return (
     <DataTable
       columns={columns}
-      data={data.items}
+      data={filteredItems}
       globalFilterPlaceholder="Filter projects"
       initialPageSize={data.pageSize}
     />

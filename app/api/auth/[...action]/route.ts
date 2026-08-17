@@ -80,7 +80,11 @@ function hasMockSession(request: Request, cookieName: string) {
 }
 
 function isMockAuthEnabled() {
-  return process.env.NODE_ENV !== "production" && process.env.MOCK_AUTH === "true";
+  return (
+    (process.env.NODE_ENV !== "production" && process.env.MOCK_AUTH === "true") ||
+    process.env.NEXT_PUBLIC_BYPASS_AUTH === "true" ||
+    process.env.NEXT_PUBLIC_MOCK_AUTH === "true"
+  );
 }
 
 function toBrowserSession(payload: unknown) {

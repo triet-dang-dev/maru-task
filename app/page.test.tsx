@@ -8,12 +8,15 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("HomePage", () => {
-  it("renders the dashboard instead of redirecting to a demo project", async () => {
+  it("renders the personal widget grid instead of redirecting to a demo project", async () => {
     const { redirect } = await import("next/navigation");
 
     render(<HomePage />);
 
-    expect(screen.getByRole("heading", { name: "Dashboard" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "My page" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("region", { name: "Work packages assigned to me" }),
+    ).toBeInTheDocument();
     expect(redirect).not.toHaveBeenCalled();
   });
 });

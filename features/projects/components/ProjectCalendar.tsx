@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -12,9 +12,12 @@ import Typography from "@mui/material/Typography";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
+import { getWorkItems } from "@/features/work-items/service";
+import type { WorkItemListItem } from "@/features/work-items/types";
+
 const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const calendarEvents = [
+const defaultCalendarEvents = [
   { date: "2026-08-11", id: "101", subject: "Map the project list contract" },
   { date: "2026-08-13", id: "102", subject: "Migrate the work-item table" },
   { date: "2026-08-15", id: "103", subject: "Create the authentication screen" },
@@ -68,6 +71,35 @@ function formatWeek(days: Date[]) {
 export function ProjectCalendar({ projectId }: { projectId: string }) {
   const [currentDate, setCurrentDate] = useState(() => new Date(Date.UTC(2026, 7, 11)));
   const [view, setView] = useState<"month" | "week">("month");
+  const [items, setItems] = useState<WorkItemListItem[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getWorkItems(projectId)
+      .then((res) => {
+        if (isMounted && res.items && res.items.length > 0) {
+          setItems(res.items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId]);
+
+  const calendarEvents = useMemo(() => {
+    if (items.length === 0) return defaultCalendarEvents;
+    return items.map((it, idx) => {
+      const dayOffset = 10 + (idx % 18);
+      const dayStr = dayOffset < 10 ? `0${dayOffset}` : `${dayOffset}`;
+      return {
+        date: `2026-08-${dayStr}`,
+        id: it.id,
+        subject: it.subject,
+      };
+    });
+  }, [items]);
+
   const days = view === "month" ? getMonthDays(currentDate) : getWeekDays(currentDate);
   const currentMonth = currentDate.getUTCMonth();
 
@@ -99,117 +131,143 @@ export function ProjectCalendar({ projectId }: { projectId: string }) {
             View scheduled work packages by date.
           </Typography>
         </Box>
+        <Typography
+          component={Link}
+          href={`/projects/${projectId}/work-items`}
+          sx={{ color: "primary.main", fontWeight: 700 }}
+        >
+          Open work packages
+        </Typography>
       </Stack>
 
-      <Paper sx={{ minHeight: 520, p: { xs: 2, sm: 3 } }} variant="outlined">
-        <Stack
-          direction={{ sm: "row" }}
-          spacing={2}
-          sx={{ alignItems: "center", justifyContent: "space-between", mb: 3 }}
-        >
-          <Stack direction="row" spacing={1}>
-            <Button
-              aria-label={view === "month" ? "Previous month" : "Previous week"}
-              onClick={() => changeDateRange(-1)}
-              size="small"
-              variant="outlined"
-            >
-              <ChevronLeft aria-hidden="true" size={17} />
-            </Button>
-            <Button
-              aria-label={view === "month" ? "Next month" : "Next week"}
-              onClick={() => changeDateRange(1)}
-              size="small"
-              variant="outlined"
-            >
-              <ChevronRight aria-hidden="true" size={17} />
-            </Button>
-            <Button
-              onClick={() => setCurrentDate(new Date(Date.UTC(2026, 7, 11)))}
-              size="small"
-              variant="outlined"
-            >
-              Today
-            </Button>
-          </Stack>
-          <Typography component="h2" variant="h5">
+      <Stack
+        direction={{ sm: "row" }}
+        spacing={2}
+        sx={{ alignItems: "center", justifyContent: "space-between", mb: 3 }}
+      >
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <Button
+            aria-label="Previous month"
+            onClick={() => changeDateRange(-1)}
+            size="small"
+            startIcon={<ChevronLeft aria-hidden="true" size={16} />}
+            variant="outlined"
+          >
+            Prev
+          </Button>
+          <Button
+            onClick={() => setCurrentDate(new Date(Date.UTC(2026, 7, 11)))}
+            size="small"
+            variant="outlined"
+          >
+            Today
+          </Button>
+          <Button
+            aria-label="Next month"
+            onClick={() => changeDateRange(1)}
+            size="small"
+            startIcon={<ChevronRight aria-hidden="true" size={16} />}
+            variant="outlined"
+          >
+            Next
+          </Button>
+          <Typography sx={{ fontWeight: 700, minWidth: "12rem" }}>
             {view === "month" ? formatMonth(currentDate) : formatWeek(days)}
           </Typography>
-          <ToggleButtonGroup
-            aria-label="Calendar view"
-            exclusive
-            onChange={(_, nextView: "month" | "week" | null) => nextView && setView(nextView)}
-            size="small"
-            value={view}
-          >
-            <ToggleButton value="month">Month</ToggleButton>
-            <ToggleButton value="week">Week</ToggleButton>
-          </ToggleButtonGroup>
         </Stack>
 
+        <ToggleButtonGroup
+          aria-label="Calendar view"
+          exclusive
+          onChange={(_, nextView: "month" | "week" | null) => {
+            if (nextView) setView(nextView);
+          }}
+          size="small"
+          value={view}
+        >
+          <ToggleButton value="month">Month</ToggleButton>
+          <ToggleButton value="week">Week</ToggleButton>
+        </ToggleButtonGroup>
+      </Stack>
+
+      <Paper aria-label="Work package calendar" role="grid" sx={{ overflow: "hidden" }} variant="outlined">
         <Box
-          aria-label="Work package calendar"
-          role="grid"
           sx={{
             display: "grid",
-            gridTemplateColumns: "repeat(7, minmax(7rem, 1fr))",
-            minWidth: 784,
-            overflowX: "auto",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+            textAlign: "center",
           }}
         >
-          {weekdays.map((weekday) => (
+          {weekdays.map((day) => (
             <Box
-              key={weekday}
-              role="columnheader"
-              sx={{ borderBottom: 1, borderColor: "divider", p: 1, textAlign: "center" }}
+              key={day}
+              sx={{
+                bgcolor: "action.hover",
+                borderBottom: 1,
+                borderColor: "divider",
+                fontWeight: 700,
+                py: 1.5,
+              }}
             >
               <Typography color="text.secondary" variant="caption">
-                {weekday}
+                {day}
               </Typography>
             </Box>
           ))}
-          {days.map((day) => {
-            const isCurrentMonth = day.getUTCMonth() === currentMonth;
-            const events = calendarEvents.filter((event) => event.date === dateKey(day));
+        </Box>
+
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+          }}
+        >
+          {days.map((day, index) => {
+            const key = dateKey(day);
+            const events = calendarEvents.filter((event) => event.date === key);
+            const isOutsideMonth = view === "month" && day.getUTCMonth() !== currentMonth;
 
             return (
               <Box
-                aria-label={dateKey(day)}
-                key={dateKey(day)}
-                role="gridcell"
+                aria-label={`Calendar day ${key}`}
+                key={day.toISOString()}
                 sx={{
+                  bgcolor: isOutsideMonth ? "action.hover" : "background.paper",
                   borderBottom: 1,
                   borderColor: "divider",
-                  borderRight: 1,
-                  minHeight: 92,
-                  p: 1,
-                  ...(isCurrentMonth ? {} : { bgcolor: "action.hover", color: "text.disabled" }),
+                  borderRight: (index + 1) % 7 !== 0 ? 1 : 0,
+                  minHeight: view === "month" ? 110 : 280,
+                  p: 1.5,
                 }}
               >
-                <Typography sx={{ fontWeight: 700 }} variant="caption">
+                <Typography
+                  color={isOutsideMonth ? "text.disabled" : "text.secondary"}
+                  sx={{ fontWeight: 600, mb: 1 }}
+                  variant="caption"
+                >
                   {day.getUTCDate()}
                 </Typography>
-                <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+                <Stack spacing={0.5}>
                   {events.map((event) => (
                     <Box
                       component={Link}
                       href={`/projects/${projectId}/work-items/${event.id}`}
                       key={event.id}
                       sx={{
-                        backgroundColor: "primary.main",
-                        borderRadius: 1,
+                        bgcolor: "primary.main",
+                        borderRadius: 0.5,
                         color: "primary.contrastText",
                         display: "block",
                         fontSize: "0.75rem",
+                        fontWeight: 600,
                         overflow: "hidden",
-                        px: 0.75,
+                        px: 1,
                         py: 0.5,
+                        textDecoration: "none",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
-                        "&:focus-visible": {
-                          outline: "3px solid",
-                          outlineColor: "primary.light",
-                          outlineOffset: 2,
+                        "&:hover": {
+                          opacity: 0.9,
                         },
                       }}
                     >

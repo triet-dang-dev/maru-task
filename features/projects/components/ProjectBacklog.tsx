@@ -16,6 +16,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { IconButton } from "@/components/ui/IconButton";
+import { agileApiService } from "@/services/api/backend-services/agile";
 
 export interface BacklogWorkPackage {
   id: string;
@@ -76,6 +77,20 @@ export function ProjectBacklog({
       if (index < 0 || nextIndex < 0 || nextIndex >= currentItems.length) return currentItems;
       const reordered = [...currentItems];
       [reordered[index], reordered[nextIndex]] = [reordered[nextIndex], reordered[index]];
+
+      if (projectId) {
+        agileApiService
+          .reorderBacklogs({
+            body: {
+              items: reordered.map((it, idx) => ({ id: it.id, position: idx })),
+              projectId,
+            },
+          })
+          .catch(() => {
+            // Fallback in mock mode
+          });
+      }
+
       return reordered;
     });
   };

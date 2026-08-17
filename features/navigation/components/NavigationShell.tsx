@@ -4,17 +4,21 @@ import Avatar from "@mui/material/Avatar";
 import IconButton from "@mui/material/IconButton";
 import Stack from "@mui/material/Stack";
 import {
+  BookOpen,
   CalendarDays,
   ChartGantt,
+  Clock,
   Columns3,
+  FileText,
   FolderKanban,
   LayoutDashboard,
   ListTodo,
   LogOut,
   Settings,
+  UsersRound,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { AppShell, type AppShellNavigationItem } from "@/components/layout/AppShell";
 import { SessionGate } from "@/features/auth/components/SessionGate";
@@ -23,6 +27,8 @@ import {
   NotificationCenter,
   type NotificationItem,
 } from "@/features/notifications/components/NotificationCenter";
+import { getProjects } from "@/features/projects/service";
+import type { ProjectListItem } from "@/features/projects/types";
 import { GlobalSearch } from "@/features/search/components/GlobalSearch";
 
 const iconProps = { size: 18, strokeWidth: 1.8 };
@@ -58,6 +64,7 @@ function isActive(pathname: string, href: string) {
 function getContextLabel(pathname: string) {
   if (pathname.startsWith("/projects/")) return "Project workspace";
   if (pathname === "/projects") return "Projects";
+  if (pathname === "/") return "Personal workspace";
   return "Dashboard";
 }
 
@@ -78,9 +85,21 @@ function getProjectNavigation(pathname: string): AppShellNavigationItem[] {
       label: "Work packages",
     },
     { href: `${projectPath}/boards`, icon: <Columns3 {...iconProps} />, label: "Boards" },
+    {
+      href: `${projectPath}/team-planner`,
+      icon: <UsersRound {...iconProps} />,
+      label: "Team planner",
+    },
     { href: `${projectPath}/backlogs`, icon: <ListTodo {...iconProps} />, label: "Backlogs" },
     { href: `${projectPath}/gantt`, icon: <ChartGantt {...iconProps} />, label: "Gantt" },
     { href: `${projectPath}/calendar`, icon: <CalendarDays {...iconProps} />, label: "Calendar" },
+    { href: `${projectPath}/documents`, icon: <FileText {...iconProps} />, label: "Documents" },
+    { href: `${projectPath}/wiki`, icon: <BookOpen {...iconProps} />, label: "Wiki" },
+    {
+      href: `${projectPath}/reports/time-cost`,
+      icon: <Clock {...iconProps} />,
+      label: "Time and costs",
+    },
     { href: `${projectPath}/settings`, icon: <Settings {...iconProps} />, label: "Settings" },
   ];
 
@@ -116,6 +135,22 @@ function AuthenticatedNavigationShell({
 }) {
   const router = useRouter();
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [projectList, setProjectList] = useState<ProjectListItem[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getProjects()
+      .then((res) => {
+        if (isMounted && res.items) {
+          setProjectList(res.items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const initials = session.displayName
     .split(" ")
     .map((name) => name[0])
@@ -138,7 +173,7 @@ function AuthenticatedNavigationShell({
       active: isActive(pathname, "/"),
       href: "/",
       icon: <LayoutDashboard {...iconProps} />,
-      label: "Dashboard",
+      label: "My page",
     },
     {
       active: isProjectsActive(pathname),
@@ -154,6 +189,18 @@ function AuthenticatedNavigationShell({
         ],
         searchPlaceholder: "Search by name",
         sections: [
+          ...(projectList.length > 0
+            ? [
+                {
+                  items: projectList.map((proj) => ({
+                    active: pathname.startsWith(`/projects/${proj.id}`),
+                    href: `/projects/${proj.id}`,
+                    label: proj.name,
+                  })),
+                  title: "All projects",
+                },
+              ]
+            : []),
           {
             items: [
               { href: "/projects?status=on-track", label: "On track" },
@@ -168,7 +215,7 @@ function AuthenticatedNavigationShell({
     },
     {
       active: pathname === "/my-work",
-      href: "/projects/42",
+      href: "/projects/42/work-items",
       icon: <ListTodo {...iconProps} />,
       label: "My work",
     },
@@ -196,7 +243,7 @@ function AuthenticatedNavigationShell({
             <Avatar
               aria-label={session.displayName}
               sx={{
-                bgcolor: "rgba(255, 255, 255, 0.16)",
+                bgcolor: "rgba(0, 0, 0, 0.14)",
                 border: 1,
                 borderColor: "rgba(255, 255, 255, 0.42)",
                 fontSize: "0.75rem",

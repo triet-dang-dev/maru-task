@@ -53,6 +53,10 @@ describe("NavigationShell", () => {
       "href",
       "/projects/42/boards",
     );
+    expect(screen.getAllByRole("link", { name: "Team planner" })[0]).toHaveAttribute(
+      "href",
+      "/projects/42/team-planner",
+    );
   });
 
   it("marks only the current project module active", () => {
@@ -79,5 +83,21 @@ describe("NavigationShell", () => {
       "aria-current",
       "page",
     );
+  });
+
+  it("uses My page as the personal dashboard entry", () => {
+    pathname = "/";
+
+    render(
+      <NavigationShell>
+        <h1>My page</h1>
+      </NavigationShell>,
+    );
+
+    expect(screen.getAllByRole("link", { name: "My page" })[0]).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getByText("Personal workspace")).toBeInTheDocument();
   });
 });

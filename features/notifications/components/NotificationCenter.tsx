@@ -13,6 +13,8 @@ import Typography from "@mui/material/Typography";
 import { Bell, Check } from "lucide-react";
 import { useId, useState } from "react";
 
+import { notificationsApiService } from "@/services/api/backend-services/notifications";
+
 export interface NotificationItem {
   actor: string;
   id: string;
@@ -173,9 +175,12 @@ export function NotificationCenter({ isLoading = false, notifications }: Notific
                     {!notification.read ? (
                       <IconButton
                         aria-label="Mark notification as read"
-                        onClick={() =>
-                          setReadNotificationIds((ids) => new Set(ids).add(notification.id))
-                        }
+                        onClick={() => {
+                          setReadNotificationIds((ids) => new Set(ids).add(notification.id));
+                          notificationsApiService
+                            .markRead({ pathParams: { notificationId: notification.id } })
+                            .catch(() => {});
+                        }}
                         size="small"
                       >
                         <Check aria-hidden="true" size={16} />

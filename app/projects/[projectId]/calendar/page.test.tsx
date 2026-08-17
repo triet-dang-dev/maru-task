@@ -8,12 +8,11 @@ vi.mock("@/features/projects/components/ProjectCalendar", () => ({
 import ProjectCalendarPage from "./page";
 
 describe("ProjectCalendarPage", () => {
-  it("renders the project calendar workspace with active navigation", async () => {
+  it("renders the project calendar workspace", async () => {
     const page = await ProjectCalendarPage({ params: Promise.resolve({ projectId: "proj-1" }) });
 
     render(page);
 
-    expect(screen.getByRole("link", { name: "Calendar" })).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("Calendar for proj-1")).toBeInTheDocument();
   });
 });

@@ -93,6 +93,8 @@ export function GlobalSearch({
         <Search aria-hidden="true" size={18} strokeWidth={1.8} />
         <InputBase
           aria-label="Search work packages"
+          id="global-work-package-search"
+          name="globalWorkPackageSearch"
           onBlur={() => setIsFocused(false)}
           onChange={(event) => {
             setQuery(event.target.value);

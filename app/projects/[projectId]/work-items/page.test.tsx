@@ -16,11 +16,6 @@ describe("ProjectWorkItemsPage", () => {
     render(page);
 
     expect(screen.getByRole("heading", { name: "Work packages" })).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Project navigation" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Work packages" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
     expect(screen.getByText("Work items panel for proj-1")).toBeInTheDocument();
   });
 });

@@ -23,19 +23,5 @@ describe("ProjectPage", () => {
 
     expect(screen.getByText("Project summary for proj-1")).toBeInTheDocument();
     expect(screen.getByText("Project overview dashboard for proj-1")).toBeInTheDocument();
-    expect(screen.getByRole("navigation", { name: "Project navigation" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute(
-      "href",
-      "/projects/proj-1",
-    );
-    expect(screen.getByRole("link", { name: "Overview" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Work packages" })).toHaveAttribute(
-      "href",
-      "/projects/proj-1/work-items",
-    );
-    expect(screen.getByRole("link", { name: "Boards" })).toHaveAttribute(
-      "href",
-      "/projects/proj-1/boards",
-    );
   });
 });

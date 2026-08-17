@@ -1,5 +1,4 @@
 import { PageContainer } from "@/components/layout";
-import { ProjectWorkspaceNavigation } from "@/features/projects/components/ProjectWorkspaceNavigation";
 import { ProjectWorkspaceOverview } from "@/features/projects/components/ProjectWorkspaceOverview";
 import { ProjectWorkspaceSummary } from "@/features/projects/components/ProjectWorkspaceSummary";
 
@@ -13,7 +12,6 @@ export default async function ProjectPage({ params }: ProjectPageProps) {
   return (
     <PageContainer>
       <ProjectWorkspaceSummary projectId={projectId} />
-      <ProjectWorkspaceNavigation projectId={projectId} />
       <ProjectWorkspaceOverview projectId={projectId} />
     </PageContainer>
   );

@@ -1,14 +1,19 @@
 "use client";
 
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+
+import { getWorkItems } from "@/features/work-items/service";
+import type { WorkItemListItem } from "@/features/work-items/types";
 
 const timelineDays = ["11 Aug", "12 Aug", "13 Aug", "14 Aug", "15 Aug", "16 Aug", "17 Aug"];
 
-const scheduledWorkPackages = [
+const defaultScheduledWorkPackages = [
   {
     duration: 4,
     id: "101",
@@ -34,6 +39,32 @@ const scheduledWorkPackages = [
 
 export function ProjectGantt({ projectId }: { projectId: string }) {
   const workPackagesHref = `/projects/${projectId}/work-items`;
+  const [items, setItems] = useState<WorkItemListItem[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    getWorkItems(projectId)
+      .then((res) => {
+        if (isMounted && res.items && res.items.length > 0) {
+          setItems(res.items);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId]);
+
+  const scheduledWorkPackages = useMemo(() => {
+    if (items.length === 0) return defaultScheduledWorkPackages;
+    return items.map((it, idx) => ({
+      duration: Math.max(2, 5 - (idx % 3)),
+      id: it.id,
+      startOffset: (idx * 2) % 5,
+      status: it.status,
+      subject: it.subject,
+    }));
+  }, [items]);
 
   return (
     <Box>
@@ -50,13 +81,18 @@ export function ProjectGantt({ projectId }: { projectId: string }) {
             Schedule work packages against a shared timeline.
           </Typography>
         </Box>
-        <Typography
-          component={Link}
-          href={workPackagesHref}
-          sx={{ color: "primary.main", fontWeight: 700 }}
-        >
-          Open work packages
-        </Typography>
+        <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
+          <Button size="small" variant="outlined">
+            Today
+          </Button>
+          <Typography
+            component={Link}
+            href={workPackagesHref}
+            sx={{ color: "primary.main", fontWeight: 700 }}
+          >
+            Open work packages
+          </Typography>
+        </Stack>
       </Stack>
 
       <Paper sx={{ minWidth: 0, overflow: "hidden" }} variant="outlined">
@@ -99,67 +135,36 @@ export function ProjectGantt({ projectId }: { projectId: string }) {
             component="section"
             sx={{ borderColor: "divider", borderLeft: { lg: 3 }, overflowX: "auto" }}
           >
-            <Box sx={{ minWidth: 560, position: "relative" }}>
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(80px, 1fr))" }}>
+            <div className="min-w-[34rem] p-4">
+              <div className="grid grid-cols-7 border-b border-[var(--mui-palette-divider)] pb-3 text-center text-xs font-semibold text-[var(--mui-palette-text-secondary)]">
                 {timelineDays.map((day) => (
-                  <Typography
-                    key={day}
-                    sx={{ borderBottom: 1, borderColor: "divider", p: 1.5, textAlign: "center" }}
-                    variant="caption"
-                  >
-                    {day}
-                  </Typography>
+                  <span key={day}>{day}</span>
                 ))}
-              </Box>
-              <Box
-                aria-label="Today"
-                sx={{
-                  borderColor: "error.main",
-                  borderLeft: 2,
-                  bottom: 0,
-                  left: "28.57%",
-                  position: "absolute",
-                  top: 0,
-                }}
-              >
-                <Typography
-                  color="error.main"
-                  sx={{ left: 4, position: "absolute", top: 4, whiteSpace: "nowrap" }}
-                  variant="caption"
-                >
-                  Today
-                </Typography>
-              </Box>
-              {scheduledWorkPackages.map((workPackage) => (
-                <Box
-                  key={workPackage.id}
-                  sx={{ borderBottom: 1, borderColor: "divider", height: 57, position: "relative" }}
-                >
-                  <Box
-                    aria-label={`${workPackage.subject} schedule`}
-                    sx={{
-                      alignItems: "center",
-                      backgroundColor: "primary.main",
-                      borderRadius: 1,
-                      color: "primary.contrastText",
-                      display: "flex",
-                      fontSize: "0.75rem",
-                      height: 24,
-                      left: `${(workPackage.startOffset / timelineDays.length) * 100}%`,
-                      overflow: "hidden",
-                      px: 1,
-                      position: "absolute",
-                      textOverflow: "ellipsis",
-                      top: 16,
-                      whiteSpace: "nowrap",
-                      width: `${(workPackage.duration / timelineDays.length) * 100}%`,
-                    }}
-                  >
-                    {workPackage.subject}
-                  </Box>
-                </Box>
-              ))}
-            </Box>
+              </div>
+              <div className="mt-4 space-y-4">
+                {scheduledWorkPackages.map((workPackage) => {
+                  const leftPercentage = (workPackage.startOffset / timelineDays.length) * 100;
+                  const widthPercentage = (workPackage.duration / timelineDays.length) * 100;
+
+                  return (
+                    <div
+                      className="relative h-10 rounded bg-[var(--mui-palette-action-hover)]"
+                      key={workPackage.id}
+                    >
+                      <div
+                        className="absolute top-1 flex h-8 items-center truncate rounded bg-[var(--mui-palette-primary-main)] px-3 text-xs font-semibold text-white shadow-sm"
+                        style={{
+                          left: `${leftPercentage}%`,
+                          width: `${Math.min(widthPercentage, 100 - leftPercentage)}%`,
+                        }}
+                      >
+                        {workPackage.subject}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </Box>
         </Box>
       </Paper>
