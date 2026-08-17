@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loginWithEmail } from "../service";
+import { loginWithEmail, navigateToAuthenticatedPath } from "../service";
 import { LoginPageContent } from "./LoginPageContent";
 
 const { replace } = vi.hoisted(() => ({ replace: vi.fn() }));
@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => ({ get: getNextPath }),
 }));
 vi.mock("../azure", () => ({ buildAzureSignInUrl: () => "#azure-sign-in" }));
-vi.mock("../service", () => ({ loginWithEmail: vi.fn() }));
+vi.mock("../service", () => ({ loginWithEmail: vi.fn(), navigateToAuthenticatedPath: vi.fn() }));
 
 describe("LoginPageContent", () => {
   beforeEach(() => {
@@ -75,7 +75,8 @@ describe("LoginPageContent", () => {
         email: "morgan@example.com",
         password: "not-a-real-password",
       });
-      expect(replace).toHaveBeenCalledWith("/");
+      expect(navigateToAuthenticatedPath).toHaveBeenCalledWith("/");
+      expect(replace).not.toHaveBeenCalled();
     });
   });
 
@@ -92,7 +93,7 @@ describe("LoginPageContent", () => {
     await user.click(screen.getByRole("button", { name: "Sign in" }));
 
     await waitFor(() => {
-      expect(replace).toHaveBeenCalledWith("/projects/42");
+      expect(navigateToAuthenticatedPath).toHaveBeenCalledWith("/projects/42");
     });
   });
 });

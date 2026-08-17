@@ -7,14 +7,14 @@ import { ArrowLeft, Building2, Mail } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/Button";
 import { InlineAlert } from "@/components/ui/InlineAlert";
 import { InputField } from "@/components/ui/InputField";
 
 import { buildAzureSignInUrl } from "../azure";
-import { loginWithEmail } from "../service";
+import { loginWithEmail, navigateToAuthenticatedPath } from "../service";
 
 type LoginFormValues = {
   email: string;
@@ -24,7 +24,6 @@ type LoginFormValues = {
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function LoginPageContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +50,7 @@ export function LoginPageContent() {
       setError(null);
       await loginWithEmail({ email: email.trim(), password });
       const nextPath = searchParams.get("next");
-      router.replace(nextPath && nextPath.startsWith("/") ? nextPath : "/");
+      navigateToAuthenticatedPath(nextPath && nextPath.startsWith("/") ? nextPath : "/");
     } catch (loginError) {
       setError(loginError instanceof Error ? loginError.message : "Unable to sign in.");
     } finally {

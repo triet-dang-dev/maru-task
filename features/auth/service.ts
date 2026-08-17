@@ -11,6 +11,10 @@ const browserSessionSchema = z.object({
 export type BrowserSession = z.infer<typeof browserSessionSchema>;
 export type RegisterUserRole = "Admin" | "ProjectManager" | "Developer" | "Viewer";
 
+export function navigateToAuthenticatedPath(path: string): void {
+  window.location.assign(path);
+}
+
 export async function loginWithEmail(input: { email: string; password: string }): Promise<void> {
   const response = await fetch("/api/auth/login/web-app", {
     body: JSON.stringify(input),
