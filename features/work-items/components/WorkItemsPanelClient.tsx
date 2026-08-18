@@ -8,6 +8,7 @@ import Stack from "@mui/material/Stack";
 import ToggleButton from "@mui/material/ToggleButton";
 import ToggleButtonGroup from "@mui/material/ToggleButtonGroup";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { createColumnHelper } from "@tanstack/react-table";
 
@@ -160,6 +161,39 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
       value: status,
     })),
   ];
+
+  const searchParams = useSearchParams();
+  const queryParam = searchParams?.get("query");
+  const statusParam = searchParams?.get("status");
+
+  useEffect(() => {
+    if (statusParam) {
+      setStatusFilter(statusParam);
+    }
+    if (queryParam) {
+      if (queryParam === "overdue") {
+        setAdvancedFilters([
+          {
+            field: "status",
+            id: "filter-overdue-status",
+            operator: "is_not",
+            value: "Closed",
+          },
+        ]);
+        setShowFilterBar(true);
+      } else if (queryParam === "assigned-to-me") {
+        setAdvancedFilters([
+          {
+            field: "assignee",
+            id: "filter-assigned-to-me",
+            operator: "is",
+            value: "Riley Park",
+          },
+        ]);
+        setShowFilterBar(true);
+      }
+    }
+  }, [queryParam, statusParam]);
 
   useEffect(() => {
     if (error) toastError(error);

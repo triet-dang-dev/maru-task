@@ -31,6 +31,7 @@ export const designTokens = {
   layout: {
     contentMaxWidth: 1280,
     headerHeight: 55,
+    sidebarCollapsedWidth: 56,
     sidebarWidth: 280,
   },
   motion: {

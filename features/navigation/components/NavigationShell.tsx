@@ -11,11 +11,14 @@ import {
   Columns3,
   FileText,
   FolderKanban,
+  History,
   LayoutDashboard,
   ListTodo,
   LogOut,
+  Settings,
+  Users,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { AppShell, type AppShellNavigationItem } from "@/components/layout/AppShell";
@@ -29,7 +32,7 @@ import { getProjects } from "@/features/projects/service";
 import type { ProjectListItem } from "@/features/projects/types";
 import { GlobalSearch } from "@/features/search/components/GlobalSearch";
 
-import { navigationTree, type NavigationTreeItem } from "../navigation-tree";
+import { navigationTree, projectWorkspaceNavigationTree, type NavigationTreeItem } from "../navigation-tree";
 import { ProjectScopeSelector } from "./ProjectScopeSelector";
 
 const iconProps = { size: 18, strokeWidth: 1.8 };
@@ -62,11 +65,14 @@ function isActive(pathname: string, href: string) {
   return href === "/" ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function getContextLabel(pathname: string) {
-  if (pathname.startsWith("/projects/")) return "Project workspace";
+function getContextLabel(pathname: string, projectId: string | null, projectName?: string) {
+  if (projectId && pathname.startsWith(`/projects/${projectId}`)) {
+    return projectName ?? "Project workspace";
+  }
   if (pathname === "/projects") return "Projects";
   if (pathname === "/my/page") return "Personal workspace";
   if (pathname === "/home") return "Home";
+  if (pathname.startsWith("/my/")) return "Personal workspace";
   return "Dashboard";
 }
 
@@ -82,16 +88,25 @@ function isProjectsActive(pathname: string) {
 
 function getNavigationIcon(label: string) {
   const icons: Record<string, ReactNode> = {
+    Activity: <History {...iconProps} />,
+    Backlogs: <ListTodo {...iconProps} />,
     Boards: <Columns3 {...iconProps} />,
+    Calendar: <CalendarDays {...iconProps} />,
+    Documents: <FileText {...iconProps} />,
     "Gantt charts": <ChartGantt {...iconProps} />,
     Home: <LayoutDashboard {...iconProps} />,
     Meetings: <CalendarDays {...iconProps} />,
+    Members: <Users {...iconProps} />,
     "My page": <LayoutDashboard {...iconProps} />,
     "My time tracking": <Clock {...iconProps} />,
     News: <FileText {...iconProps} />,
+    Overview: <LayoutDashboard {...iconProps} />,
     Portfolios: <FolderKanban {...iconProps} />,
+    "Project settings": <Settings {...iconProps} />,
     Projects: <FolderKanban {...iconProps} />,
     Requirements: <FileText {...iconProps} />,
+    Settings: <Settings {...iconProps} />,
+    "Team planner": <CalendarDays {...iconProps} />,
     "Time and costs": <Clock {...iconProps} />,
     Wiki: <BookOpen {...iconProps} />,
     "Work packages": <ListTodo {...iconProps} />,
@@ -100,35 +115,56 @@ function getNavigationIcon(label: string) {
   return icons[label];
 }
 
-function resolveNavigationHref(href: string | undefined, projectId: string | null) {
-  if (!href?.includes(":projectId")) return href;
-  return projectId ? href.replace(":projectId", projectId) : undefined;
+function resolveNavigationHref(
+  href: string | undefined,
+  projectId: string | null,
+  fallback?: string,
+): { href: string | undefined; usedFallback: boolean } {
+  if (!href) return { href: undefined, usedFallback: false };
+  if (!href.includes(":projectId")) return { href, usedFallback: false };
+  // Has :projectId token: resolve if we have a projectId, else fallback to /projects
+  if (projectId) return { href: href.replace(":projectId", projectId), usedFallback: false };
+  return { href: fallback ?? "/projects", usedFallback: true };
 }
 
 function toAppShellNavigation(
   items: NavigationTreeItem[],
   pathname: string,
   projectId: string | null,
+  opts: { globalFallback?: boolean } = {},
 ): AppShellNavigationItem[] {
   return items.map((item) => {
-    const href = resolveNavigationHref(item.href, projectId);
+    const { href, usedFallback } = resolveNavigationHref(
+      item.href,
+      projectId,
+      opts.globalFallback ? "/projects" : undefined,
+    );
     const hasChildren = Boolean(item.children?.length);
+
+    // An item is active only if:
+    // 1. Its href actually matches (not a fallback)
+    // 2. Special case for Projects label
     const active =
-      item.label === "Projects"
-        ? isProjectsActive(pathname)
-        : href
-          ? isActive(pathname, href)
-          : false;
+      usedFallback
+        ? false
+        : item.label === "Projects"
+          ? isProjectsActive(pathname)
+          : href
+            ? isActive(pathname, href)
+            : false;
+
+    // Only disable if explicitly planned AND no href at all; items with a resolved href are enabled
+    const disabled = item.availability === "planned" && !item.href;
 
     return {
       active,
-      disabled: item.availability === "planned" || !href,
+      disabled,
       href,
       icon: getNavigationIcon(item.label),
       label: item.label,
       submenu: hasChildren
         ? {
-            items: toAppShellNavigation(item.children!, pathname, projectId),
+            items: toAppShellNavigation(item.children!, pathname, projectId, opts),
             title: item.label,
           }
         : undefined,
@@ -161,6 +197,7 @@ function AuthenticatedNavigationShell({
   session: BrowserSession;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [projectList, setProjectList] = useState<ProjectListItem[]>([]);
 
@@ -194,18 +231,36 @@ function AuthenticatedNavigationShell({
     }
   };
 
-  const selectedProjectId = new URLSearchParams(
-    typeof window === "undefined" ? "" : window.location.search,
-  ).get("projectId");
-  const projectId = selectedProjectId ?? pathname.match(/^\/projects\/(\d+)/)?.[1] ?? null;
-  const navigation = toAppShellNavigation(navigationTree, pathname, projectId);
+  const selectedProjectId = searchParams.get("projectId");
+  const projectId =
+    selectedProjectId ??
+    pathname.match(/^\/projects\/([^/]+)/)?.[1] ??
+    null;
+
+  // Detect if we're inside a project workspace (not just /projects list)
+  const isInProjectWorkspace =
+    !!projectId &&
+    !["active", "mine", "favorites", "archived", "status"].some(
+      (view) => projectId === view || pathname.startsWith(`/projects/${view}`),
+    ) &&
+    pathname !== "/projects";
+
+  const currentProject = projectList.find((p) => String(p.id) === projectId);
+
+  const navigation = toAppShellNavigation(navigationTree, pathname, projectId, {
+    globalFallback: true,
+  });
+
+  const projectNavigation = isInProjectWorkspace
+    ? toAppShellNavigation(projectWorkspaceNavigationTree, pathname, projectId)
+    : undefined;
 
   const updateProjectScope = (nextProjectId: string | null) => {
-    const searchParams = new URLSearchParams(window.location.search);
-    if (nextProjectId) searchParams.set("projectId", nextProjectId);
-    else searchParams.delete("projectId");
+    const next = new URLSearchParams(searchParams.toString());
+    if (nextProjectId) next.set("projectId", nextProjectId);
+    else next.delete("projectId");
 
-    const search = searchParams.toString();
+    const search = next.toString();
     router.replace(search ? `${pathname}?${search}` : pathname);
   };
 
@@ -254,8 +309,9 @@ function AuthenticatedNavigationShell({
         </Stack>
       }
       brand="Maru Task"
-      contextLabel={getContextLabel(pathname)}
+      contextLabel={getContextLabel(pathname, projectId, currentProject?.name)}
       navigation={navigation}
+      projectNavigation={projectNavigation}
       projectScope={
         <ProjectScopeSelector
           onChange={updateProjectScope}
@@ -268,3 +324,4 @@ function AuthenticatedNavigationShell({
     </AppShell>
   );
 }
+

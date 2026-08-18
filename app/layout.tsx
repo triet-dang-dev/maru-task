@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 
 import { NavigationShell } from "@/features/navigation/components/NavigationShell";
 
@@ -24,7 +24,10 @@ export default function RootLayout({ children }: RootLayoutProps) {
     <html data-scroll-behavior="smooth" lang="en">
       <body>
         <AppProviders>
-          <NavigationShell>{children}</NavigationShell>
+          {/* Suspense required by useSearchParams inside NavigationShell */}
+          <Suspense>
+            <NavigationShell>{children}</NavigationShell>
+          </Suspense>
         </AppProviders>
       </body>
     </html>

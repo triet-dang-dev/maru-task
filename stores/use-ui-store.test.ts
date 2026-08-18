@@ -20,6 +20,12 @@ describe("useUiStore", () => {
       result.current.toggleSidebar();
     });
     expect(result.current.isSidebarOpen).toBe(false);
+
+    expect(result.current.isSidebarCollapsed).toBe(false);
+    act(() => {
+      result.current.toggleSidebarCollapsed();
+    });
+    expect(result.current.isSidebarCollapsed).toBe(true);
   });
 
   it("stores a typed layout density preference", () => {

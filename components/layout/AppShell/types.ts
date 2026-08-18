@@ -9,6 +9,7 @@ export interface AppShellNavigationSubmenu {
 
 export interface AppShellNavigationItem {
   active?: boolean;
+  badge?: ReactNode;
   disabled?: boolean;
   href?: string;
   icon?: ReactNode;
@@ -22,8 +23,11 @@ export interface AppShellProps {
   brand: string;
   children: ReactNode;
   contextLabel?: string;
+  isCollapsed?: boolean;
   navigation: AppShellNavigationItem[];
+  onToggleCollapse?: () => void;
   projectNavigation?: AppShellNavigationItem[];
   projectScope?: ReactNode;
   sidebarFooter?: ReactNode;
 }
+

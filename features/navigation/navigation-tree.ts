@@ -42,8 +42,8 @@ export const missingNavigationPages = [
 export const navigationTree: NavigationTreeItem[] = [
   { href: "/home", label: "Home" },
   { href: "/my/page", label: "My page" },
-  { availability: "planned", label: "My time tracking" },
-  { availability: "planned", label: "Portfolios" },
+  { href: "/my/time-tracking", label: "My time tracking" },
+  { href: "/portfolios", label: "Portfolios" },
   {
     children: [
       { href: "/projects", label: "Active projects" },
@@ -76,9 +76,9 @@ export const navigationTree: NavigationTreeItem[] = [
   { href: "/projects/:projectId/boards", label: "Boards" },
   {
     children: [
-      { availability: "planned", label: "My meetings" },
-      { availability: "planned", label: "Recurring meetings" },
-      { availability: "planned", label: "All meetings" },
+      { href: "/meetings", label: "My meetings" },
+      { href: "/meetings?view=recurring", label: "Recurring meetings" },
+      { href: "/meetings?view=all", label: "All meetings" },
       { availability: "planned", label: "Templates" },
       {
         children: [
@@ -88,10 +88,10 @@ export const navigationTree: NavigationTreeItem[] = [
         label: "Involvement",
       },
     ],
-    availability: "planned",
+    href: "/meetings",
     label: "Meetings",
   },
-  { availability: "planned", label: "News" },
+  { href: "/news", label: "News" },
   { href: "/projects/:projectId/reports/time-cost", label: "Time and costs" },
   {
     children: [
@@ -101,5 +101,61 @@ export const navigationTree: NavigationTreeItem[] = [
     href: "/projects/:projectId/wiki",
     label: "Wiki",
   },
-  { availability: "planned", label: "Requirements" },
+  { href: "/requirements", label: "Requirements" },
+];
+
+export const projectWorkspaceNavigationTree: NavigationTreeItem[] = [
+  { href: "/projects/:projectId", label: "Overview" },
+  { href: "/projects/:projectId/activity", label: "Activity" },
+  {
+    children: [
+      {
+        children: workPackageDefaultItems,
+        label: "Default views",
+      },
+    ],
+    href: "/projects/:projectId/work-items",
+    label: "Work packages",
+  },
+  {
+    children: [
+      {
+        children: [
+          { href: "/projects/:projectId/gantt", label: "All open" },
+          { availability: "planned", label: "Milestones" },
+        ],
+        label: "Default",
+      },
+    ],
+    href: "/projects/:projectId/gantt",
+    label: "Gantt charts",
+  },
+  { href: "/projects/:projectId/boards", label: "Boards" },
+  { href: "/projects/:projectId/backlogs", label: "Backlogs" },
+  { href: "/projects/:projectId/team-planner", label: "Team planner" },
+  { href: "/projects/:projectId/calendar", label: "Calendar" },
+  { href: "/projects/:projectId/news", label: "News" },
+  { href: "/projects/:projectId/reports/time-cost", label: "Time and costs" },
+  {
+    children: [
+      { availability: "planned", label: "Main wiki page" },
+      { href: "/projects/:projectId/wiki", label: "All wiki pages" },
+    ],
+    href: "/projects/:projectId/wiki",
+    label: "Wiki",
+  },
+  { href: "/projects/:projectId/documents", label: "Documents" },
+  { href: "/projects/:projectId/members", label: "Members" },
+  {
+    children: [
+      { href: "/projects/:projectId/settings", label: "General" },
+      { href: "/projects/:projectId/settings/life-cycle", label: "Life cycle" },
+      { href: "/projects/:projectId/settings/modules", label: "Modules" },
+      { href: "/projects/:projectId/settings/custom-fields", label: "Custom fields" },
+      { href: "/projects/:projectId/settings/versions", label: "Versions" },
+      { href: "/projects/:projectId/settings/categories", label: "Categories" },
+    ],
+    href: "/projects/:projectId/settings",
+    label: "Project settings",
+  },
 ];

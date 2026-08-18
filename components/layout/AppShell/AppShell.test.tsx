@@ -169,4 +169,27 @@ describe("AppShell", () => {
     expect(screen.queryByRole("heading", { name: "Status" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "On track" })).toBeInTheDocument();
   });
+
+  it("toggles desktop sidebar between expanded and thin collapsed mode", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppShell
+        brand="Maru Task"
+        navigation={[
+          { active: true, href: "/", label: "Overview" },
+          { href: "/settings", label: "Settings" },
+        ]}
+      >
+        <h1>Workspace</h1>
+      </AppShell>,
+    );
+
+    const collapseButton = screen.getByRole("button", { name: "Collapse sidebar" });
+    expect(collapseButton).toBeInTheDocument();
+
+    await user.click(collapseButton);
+
+    expect(screen.getByRole("button", { name: "Expand sidebar" })).toBeInTheDocument();
+  });
 });

@@ -5,6 +5,7 @@ let pathname = "/projects/42";
 vi.mock("next/navigation", () => ({
   usePathname: () => pathname,
   useRouter: () => ({ replace: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock("@/features/auth/components/SessionGate", () => ({
@@ -22,7 +23,7 @@ describe("NavigationShell", () => {
     pathname = "/projects/42";
   });
 
-  it("renders OpenProject-style primary navigation without a second project menu", () => {
+  it("renders OpenProject-style primary navigation and project workspace navigation for project routes", () => {
     render(
       <NavigationShell>
         <h1>Work items</h1>
@@ -46,9 +47,10 @@ describe("NavigationShell", () => {
 
     expect(screen.getAllByRole("button", { name: "Open Projects menu" })).not.toHaveLength(0);
 
+    // Project workspace navigation SHOULD be shown for any /projects/:id path (OpenProject behavior)
     expect(
-      screen.queryByRole("navigation", { name: "Project navigation" }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("navigation", { name: "Project navigation" }),
+    ).toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Boards" })[0]).toHaveAttribute(
       "href",
       "/projects/42/boards",
@@ -152,15 +154,18 @@ describe("NavigationShell", () => {
     });
   });
 
-  it("does not duplicate project-local modules below the primary navigation", () => {
+  it("shows project workspace navigation below the primary navigation when inside a project", () => {
     render(
       <NavigationShell>
         <h1>Project overview</h1>
       </NavigationShell>,
     );
 
+    // Project workspace navigation is shown when inside /projects/:id (OpenProject behavior)
     expect(
-      screen.queryByRole("navigation", { name: "Project navigation" }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("navigation", { name: "Project navigation" }),
+    ).toBeInTheDocument();
+    // Overview is the first project-workspace-specific menu item
+    expect(screen.getAllByRole("link", { name: "Overview" }).length).toBeGreaterThan(0);
   });
 });
