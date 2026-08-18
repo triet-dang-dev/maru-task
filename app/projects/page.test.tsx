@@ -8,10 +8,11 @@ vi.mock("@/features/projects/components/ProjectsPageContent", () => ({
 import ProjectsPage from "./page";
 
 describe("ProjectsPage", () => {
-  it("renders the project list route backed by the projects feature", () => {
+  it("renders the project list route without a create-project action in the page header", () => {
     render(<ProjectsPage />);
 
     expect(screen.getByRole("heading", { name: "Projects" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Create project" })).not.toBeInTheDocument();
     expect(screen.getByText("Project list content")).toBeInTheDocument();
   });
 });

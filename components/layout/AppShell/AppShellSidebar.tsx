@@ -1,4 +1,5 @@
 import Box from "@mui/material/Box";
+import Collapse from "@mui/material/Collapse";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import List from "@mui/material/List";
@@ -7,7 +8,7 @@ import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { ChevronLeft, ChevronRight, Search, X } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight, Search, X } from "lucide-react";
 import Link from "next/link";
 import { useDeferredValue, useState } from "react";
 
@@ -38,9 +39,10 @@ function Navigation({
           <ListItemButton
             aria-current={item.active ? "page" : undefined}
             aria-label={item.submenu ? `Open ${item.label} menu` : undefined}
-            component={item.submenu ? "button" : Link}
-            href={item.submenu ? undefined : item.href}
-            key={item.href}
+            component={item.submenu || item.disabled ? "button" : Link}
+            disabled={item.disabled}
+            href={item.submenu || item.disabled ? undefined : item.href}
+            key={`${item.label}:${item.href}`}
             onClick={item.submenu ? () => onOpenSubmenu?.(item.submenu!) : onNavigate}
             selected={item.active}
             sx={{
@@ -76,6 +78,92 @@ function Navigation({
             )}
           </ListItemButton>
         ))}
+      </List>
+    </Box>
+  );
+}
+
+function InlineNavigation({
+  items,
+  label,
+  onNavigate,
+}: {
+  items: AppShellNavigationItem[];
+  label: string;
+  onNavigate?: () => void;
+}) {
+  const [expandedLabels, setExpandedLabels] = useState<string[]>([]);
+
+  const toggleExpanded = (labelToToggle: string) => {
+    setExpandedLabels((currentLabels) =>
+      currentLabels.includes(labelToToggle)
+        ? currentLabels.filter((label) => label !== labelToToggle)
+        : [...currentLabels, labelToToggle],
+    );
+  };
+
+  return (
+    <Box aria-label={label} component="nav">
+      <List disablePadding sx={{ display: "grid", gap: 0.5 }}>
+        {items.map((item) => {
+          const isExpanded = expandedLabels.includes(item.label);
+
+          return (
+            <Box key={`${item.label}:${item.href}`}>
+              <ListItemButton
+                aria-current={item.active ? "page" : undefined}
+                aria-expanded={item.submenu ? isExpanded : undefined}
+                aria-label={item.submenu ? `Open ${item.label} menu` : undefined}
+                component={item.submenu || item.disabled ? "button" : Link}
+                disabled={item.disabled}
+                href={item.submenu || item.disabled ? undefined : item.href}
+                onClick={item.submenu ? () => toggleExpanded(item.label) : onNavigate}
+                selected={item.active}
+                sx={{
+                  border: "1px solid transparent",
+                  borderLeft: item.active ? "4px solid" : "4px solid transparent",
+                  borderLeftColor: item.active ? "primary.main" : "transparent",
+                  borderRadius: "0 4px 4px 0",
+                  minHeight: 36,
+                  px: 2.5,
+                  "&.Mui-selected": {
+                    bgcolor: "action.selected",
+                    color: "primary.dark",
+                  },
+                  "&:hover": { bgcolor: "action.hover" },
+                }}
+              >
+                <ListItemText
+                  primary={item.label}
+                  slotProps={{
+                    primary: { sx: { fontSize: 14, fontWeight: item.active ? 700 : 550 } },
+                  }}
+                />
+                {item.submenu ? (
+                  <ChevronDown
+                    aria-hidden="true"
+                    size={17}
+                    strokeWidth={1.8}
+                    style={{ transform: isExpanded ? "rotate(180deg)" : undefined }}
+                  />
+                ) : (
+                  item.trailing
+                )}
+              </ListItemButton>
+              {item.submenu ? (
+                <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                  <Box sx={{ pl: 2 }}>
+                    <InlineNavigation
+                      items={item.submenu.items}
+                      label={`${item.label} views`}
+                      onNavigate={onNavigate}
+                    />
+                  </Box>
+                </Collapse>
+              ) : null}
+            </Box>
+          );
+        })}
       </List>
     </Box>
   );
@@ -128,19 +216,25 @@ function SubmenuPane({
               size="small"
               slotProps={{
                 htmlInput: { "aria-label": submenu.searchPlaceholder },
-                input: { startAdornment: <Search aria-hidden="true" size={17} strokeWidth={1.8} /> },
+                input: {
+                  startAdornment: <Search aria-hidden="true" size={17} strokeWidth={1.8} />,
+                },
               }}
               value={search}
             />
           </Box>
         ) : null}
-        <Navigation items={mainItems} label={`${submenu.title} views`} onNavigate={onNavigate} />
+        <InlineNavigation
+          items={mainItems}
+          label={`${submenu.title} views`}
+          onNavigate={onNavigate}
+        />
         {sections?.map((section) => (
           <Box key={section.title} sx={{ mt: 3 }}>
             <Typography sx={{ fontWeight: 700, px: 3 }} variant="caption">
               {section.title}
             </Typography>
-            <Navigation
+            <InlineNavigation
               items={section.items}
               label={`${section.title} filters`}
               onNavigate={onNavigate}
@@ -157,8 +251,12 @@ export function AppShellSidebar({
   navigation,
   onNavigate,
   projectNavigation,
+  projectScope,
   sidebarFooter,
-}: Pick<AppShellProps, "brand" | "navigation" | "projectNavigation" | "sidebarFooter"> & {
+}: Pick<
+  AppShellProps,
+  "brand" | "navigation" | "projectNavigation" | "projectScope" | "sidebarFooter"
+> & {
   onNavigate?: () => void;
 }) {
   const [submenu, setSubmenu] = useState<AppShellNavigationSubmenu | null>(null);
@@ -195,6 +293,7 @@ export function AppShellSidebar({
         ) : null}
       </Box>
       <Divider />
+      {projectScope ? <Box sx={{ px: 3, py: 2 }}>{projectScope}</Box> : null}
 
       {submenu ? (
         <SubmenuPane onBack={() => setSubmenu(null)} onNavigate={onNavigate} submenu={submenu} />

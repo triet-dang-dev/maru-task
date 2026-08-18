@@ -23,6 +23,7 @@ export function AppShell({
   contextLabel = "Workspace",
   navigation,
   projectNavigation,
+  projectScope,
   sidebarFooter,
 }: AppShellProps) {
   const closeSidebar = useUiStore((state) => state.closeSidebar);
@@ -82,6 +83,7 @@ export function AppShell({
             navigation={navigation}
             onNavigate={closeSidebar}
             projectNavigation={projectNavigation}
+            projectScope={projectScope}
             sidebarFooter={sidebarFooter}
           />
         </Drawer>
@@ -97,6 +99,7 @@ export function AppShell({
             brand={brand}
             navigation={navigation}
             projectNavigation={projectNavigation}
+            projectScope={projectScope}
             sidebarFooter={sidebarFooter}
           />
         </Drawer>

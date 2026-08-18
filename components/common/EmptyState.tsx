@@ -20,7 +20,7 @@ export function EmptyState({ action, description, icon, title }: EmptyStateProps
         border: "1px dashed",
         borderColor: "divider",
         borderRadius: 1,
-        p: { xs: 6, sm: 8 },
+        p: { xs: 4, sm: 5 },
       }}
     >
       {icon ? (

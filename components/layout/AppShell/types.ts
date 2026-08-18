@@ -9,7 +9,8 @@ export interface AppShellNavigationSubmenu {
 
 export interface AppShellNavigationItem {
   active?: boolean;
-  href: string;
+  disabled?: boolean;
+  href?: string;
   icon?: ReactNode;
   label: string;
   submenu?: AppShellNavigationSubmenu;
@@ -23,5 +24,6 @@ export interface AppShellProps {
   contextLabel?: string;
   navigation: AppShellNavigationItem[];
   projectNavigation?: AppShellNavigationItem[];
+  projectScope?: ReactNode;
   sidebarFooter?: ReactNode;
 }

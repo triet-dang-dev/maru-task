@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 
+import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/common/EmptyState";
 import { DataTable } from "@/components/ui/DataTable";
 import { LoadingState } from "@/components/ui/LoadingState";
@@ -92,14 +93,21 @@ export function ProjectsPageContent() {
   if (!data || filteredItems.length === 0) {
     return (
       <EmptyState
+        action={
+          !error ? (
+            <Button onClick={() => {}} variant="solid">
+              Create project
+            </Button>
+          ) : undefined
+        }
         description={
           error
             ? "Projects could not be loaded. Please try again later."
             : statusFilter || viewFilter
               ? `No projects found matching the selected filter.`
-              : "No projects are available for your current account."
+              : "You do not have any projects yet. Create your first project to start planning, assigning work, and tracking progress."
         }
-        title={error ? "Projects are unavailable" : "No projects found"}
+        title={error ? "Projects are unavailable" : "No projects yet"}
       />
     );
   }

@@ -82,4 +82,91 @@ describe("AppShell", () => {
     expect(screen.getAllByRole("link", { name: "Home" })[0]).toBeInTheDocument();
     expect(screen.queryByRole("textbox", { name: "Search by name" })).not.toBeInTheDocument();
   });
+
+  it("opens and closes nested navigation groups inline", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppShell
+        brand="Maru Task"
+        navigation={[
+          {
+            href: "/projects/active",
+            label: "Projects",
+            submenu: {
+              items: [
+                {
+                  href: "#",
+                  label: "Status",
+                  submenu: {
+                    items: [{ href: "/projects/status/on-track", label: "On track" }],
+                    title: "Status",
+                  },
+                },
+              ],
+              title: "Projects",
+            },
+          },
+        ]}
+      >
+        <h1>Workspace</h1>
+      </AppShell>,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Open Projects menu" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Open Status menu" })[0]);
+
+    expect(screen.getAllByRole("button", { name: "Open Status menu" })[0]).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    expect(screen.getAllByRole("link", { name: "On track" })[0]).toHaveAttribute(
+      "href",
+      "/projects/status/on-track",
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Open Status menu" })[0]);
+    expect(screen.queryByRole("link", { name: "On track" })).not.toBeInTheDocument();
+
+    await user.click(screen.getAllByRole("button", { name: "Back to main menu" })[0]);
+    expect(screen.getByRole("navigation", { name: "Primary navigation" })).toBeInTheDocument();
+  });
+
+  it("expands nested groups inline instead of replacing the current menu panel", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <AppShell
+        brand="Maru Task"
+        navigation={[
+          {
+            href: "/projects/active",
+            label: "Projects",
+            submenu: {
+              items: [
+                {
+                  href: "#",
+                  label: "Status",
+                  submenu: {
+                    items: [{ href: "/projects/status/on-track", label: "On track" }],
+                    title: "Status",
+                  },
+                },
+              ],
+              title: "Projects",
+            },
+          },
+        ]}
+      >
+        <h1>Workspace</h1>
+      </AppShell>,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Open Projects menu" })[0]);
+    await user.click(screen.getAllByRole("button", { name: "Open Status menu" })[0]);
+
+    expect(screen.getAllByRole("heading", { name: "Projects" })[0]).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Status" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "On track" })).toBeInTheDocument();
+  });
 });

@@ -13,4 +13,3 @@ coverage/
 *.pem
 
 tsconfig.tsbuildinfo
-/docs/plans/frontend

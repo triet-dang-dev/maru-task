@@ -40,6 +40,25 @@ const projectListResponseSchema = z.object({
   }),
 });
 
+const projectCreateInputSchema = z.object({
+  code: z.string().trim().max(50).nullable().optional(),
+  description: z.string().trim().max(5000).nullable().optional(),
+  name: z.string().trim().min(1).max(200),
+});
+
+const projectCreateResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.object({
+    code: z.string().nullable(),
+    createdAt: z.string(),
+    description: z.string().nullable(),
+    name: z.string().nullable(),
+    projectId: z.number().int(),
+    status: z.string().nullable(),
+    updatedAt: z.string(),
+  }),
+});
+
 function errorResponse(status: number, requestId: string) {
   const detail =
     status === 401
@@ -56,6 +75,55 @@ function errorResponse(status: number, requestId: string) {
   return NextResponse.json(
     { ...detail, requestId },
     { headers: { "X-Request-ID": requestId }, status },
+  );
+}
+
+export async function POST(request: Request) {
+  const requestId = crypto.randomUUID();
+  const input = projectCreateInputSchema.safeParse(await request.json().catch(() => null));
+  if (!input.success) return errorResponse(422, requestId);
+
+  const env = getServerEnv();
+
+  const upstreamUrl = new URL(backendUrl(env.DOTNET_API_BASE_URL, "/projects"));
+  let upstream: Response;
+
+  try {
+    upstream = await fetch(upstreamUrl, {
+      body: JSON.stringify({
+        code: input.data.code ?? null,
+        description: input.data.description ?? null,
+        name: input.data.name,
+      }),
+      headers: createBackendHeaders(request, requestId, { contentType: "application/json" }),
+      method: "POST",
+      next: { revalidate: 0 },
+    });
+  } catch {
+    return errorResponse(502, requestId);
+  }
+
+  const payload = await upstream
+    .text()
+    .then((body) => JSON.parse(body))
+    .catch(() => null);
+
+  if (!upstream.ok) return errorResponse(upstream.status, requestId);
+
+  const parsed = projectCreateResponseSchema.safeParse(payload);
+  if (!parsed.success) return errorResponse(502, requestId);
+
+  return NextResponse.json(
+    {
+      code: parsed.data.data.code ?? "",
+      createdAt: parsed.data.data.createdAt,
+      description: parsed.data.data.description ?? "",
+      id: String(parsed.data.data.projectId),
+      name: parsed.data.data.name ?? "",
+      status: parsed.data.data.status ?? "",
+      updatedAt: parsed.data.data.updatedAt,
+    },
+    { headers: { "Cache-Control": "no-store", "X-Request-ID": requestId }, status: 200 },
   );
 }
 

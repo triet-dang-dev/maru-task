@@ -29,8 +29,8 @@ const currentUserSchema = z.object({
   success: z.literal(true),
   data: z.object({
     displayName: z.string().nullable(),
-    role: z.string().nullable(),
-    userId: z.number().int().positive(),
+    role: z.string().nullable().optional(),
+    email: z.email(),
   }),
 });
 
@@ -88,11 +88,15 @@ function isMockAuthEnabled() {
 }
 
 function toBrowserSession(payload: unknown) {
+  console.log("payload", payload);
+
   const parsed = currentUserSchema.safeParse(payload);
+  console.log("parsed", parsed);
+
   if (parsed.success) {
     return {
       displayName: parsed.data.data.displayName ?? "",
-      id: String(parsed.data.data.userId),
+      id: String(parsed.data.data.email),
       role: parsed.data.data.role ?? "",
     };
   }

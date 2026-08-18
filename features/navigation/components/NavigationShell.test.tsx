@@ -22,7 +22,7 @@ describe("NavigationShell", () => {
     pathname = "/projects/42";
   });
 
-  it("renders OpenProject-style workspace navigation and marks the current project workspace active", () => {
+  it("renders OpenProject-style primary navigation without a second project menu", () => {
     render(
       <NavigationShell>
         <h1>Work items</h1>
@@ -35,31 +35,27 @@ describe("NavigationShell", () => {
     expect(screen.getByRole("heading", { name: "Work items" })).toBeInTheDocument();
     expect(screen.getByRole("searchbox", { name: "Search work packages" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Notifications (2 unread)" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Project scope" })).toHaveTextContent(
+      "All projects",
+    );
 
-    const projectWorkspaceLinks = screen.getAllByRole("link", { name: "My work" });
-    expect(
-      projectWorkspaceLinks.every((link) => link.getAttribute("aria-current") !== "page"),
-    ).toBe(true);
+    const workPackageMenu = screen.getAllByRole("button", { name: "Open Work packages menu" });
+    expect(workPackageMenu.every((item) => item.getAttribute("aria-current") !== "page")).toBe(
+      true,
+    );
 
     expect(screen.getAllByRole("button", { name: "Open Projects menu" })).not.toHaveLength(0);
 
-    const projectNavigation = screen.getByRole("navigation", { name: "Project navigation" });
-    expect(projectNavigation).toBeInTheDocument();
-
-    const overviewLinks = screen.getAllByRole("link", { name: "Overview" });
-    expect(overviewLinks.some((link) => link.getAttribute("aria-current") === "page")).toBe(true);
-
+    expect(
+      screen.queryByRole("navigation", { name: "Project navigation" }),
+    ).not.toBeInTheDocument();
     expect(screen.getAllByRole("link", { name: "Boards" })[0]).toHaveAttribute(
       "href",
       "/projects/42/boards",
     );
-    expect(screen.getAllByRole("link", { name: "Team planner" })[0]).toHaveAttribute(
-      "href",
-      "/projects/42/team-planner",
-    );
   });
 
-  it("marks only the current project module active", () => {
+  it("maps a legacy project-local URL to its matching global module", () => {
     pathname = "/projects/42/boards";
 
     render(
@@ -71,22 +67,16 @@ describe("NavigationShell", () => {
     const boardsLinks = screen.getAllByRole("link", { name: "Boards" });
     expect(boardsLinks.some((link) => link.getAttribute("aria-current") === "page")).toBe(true);
     expect(
-      screen
-        .getAllByRole("link", { name: "Overview" })
-        .every((link) => link.getAttribute("aria-current") !== "page"),
-    ).toBe(true);
-    expect(screen.getAllByRole("link", { name: "My work" })[0]).not.toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+      screen.getAllByRole("button", { name: "Open Work packages menu" })[0],
+    ).not.toHaveAttribute("aria-current", "page");
     expect(screen.getAllByRole("button", { name: "Open Projects menu" })[0]).not.toHaveAttribute(
       "aria-current",
       "page",
     );
   });
 
-  it("uses My page as the personal dashboard entry", () => {
-    pathname = "/";
+  it("marks only My page active at its OpenProject route", () => {
+    pathname = "/my/page";
 
     render(
       <NavigationShell>
@@ -98,6 +88,79 @@ describe("NavigationShell", () => {
       "aria-current",
       "page",
     );
+    expect(screen.getAllByRole("link", { name: "Home" })[0]).not.toHaveAttribute(
+      "aria-current",
+      "page",
+    );
     expect(screen.getByText("Personal workspace")).toBeInTheDocument();
+  });
+
+  it("marks only Home active at its own route", () => {
+    pathname = "/home";
+
+    render(
+      <NavigationShell>
+        <h1>Home</h1>
+      </NavigationShell>,
+    );
+
+    expect(screen.getAllByRole("link", { name: "Home" })[0]).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(screen.getAllByRole("link", { name: "My page" })[0]).not.toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+  });
+
+  it("routes the global work package menu to the canonical all-open view", () => {
+    render(
+      <NavigationShell>
+        <h1>My work</h1>
+      </NavigationShell>,
+    );
+
+    expect(screen.getAllByRole("button", { name: "Open Work packages menu" })).not.toHaveLength(0);
+  });
+
+  it("exposes the complete OpenProject primary navigation", () => {
+    pathname = "/";
+
+    render(
+      <NavigationShell>
+        <h1>Home</h1>
+      </NavigationShell>,
+    );
+
+    [
+      "Home",
+      "My page",
+      "My time tracking",
+      "Portfolios",
+      "Projects",
+      "Work packages",
+      "Gantt charts",
+      "Boards",
+      "Meetings",
+      "News",
+      "Time and costs",
+      "Wiki",
+      "Requirements",
+    ].forEach((label) => {
+      expect(screen.getAllByText(label).length).toBeGreaterThan(0);
+    });
+  });
+
+  it("does not duplicate project-local modules below the primary navigation", () => {
+    render(
+      <NavigationShell>
+        <h1>Project overview</h1>
+      </NavigationShell>,
+    );
+
+    expect(
+      screen.queryByRole("navigation", { name: "Project navigation" }),
+    ).not.toBeInTheDocument();
   });
 });

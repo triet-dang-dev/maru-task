@@ -5,7 +5,7 @@
     "version": "1.0"
   },
   "paths": {
-    "/activity-feed": {
+    "/api/v1/activity-feed": {
       "get": {
         "tags": ["ActivityFeed"],
         "parameters": [
@@ -70,7 +70,7 @@
         }
       }
     },
-    "/agile/backlogs": {
+    "/api/v1/Agile/backlogs": {
       "get": {
         "tags": ["Agile"],
         "parameters": [
@@ -128,7 +128,7 @@
         }
       }
     },
-    "/agile/backlogs/reorder": {
+    "/api/v1/Agile/backlogs/reorder": {
       "patch": {
         "tags": ["Agile"],
         "requestBody": {
@@ -164,7 +164,7 @@
         }
       }
     },
-    "/agile/boards": {
+    "/api/v1/Agile/boards": {
       "get": {
         "tags": ["Agile"],
         "parameters": [
@@ -199,7 +199,7 @@
         }
       }
     },
-    "/agile/sprints/active/board": {
+    "/api/v1/Agile/sprints/active/board": {
       "get": {
         "tags": ["Agile"],
         "parameters": [
@@ -226,7 +226,7 @@
         }
       }
     },
-    "/agile/sprints/{sprintId}/burndown": {
+    "/api/v1/Agile/sprints/{sprintId}/burndown": {
       "get": {
         "tags": ["Agile"],
         "parameters": [
@@ -270,7 +270,7 @@
         }
       }
     },
-    "/agile/boards/move": {
+    "/api/v1/Agile/boards/move": {
       "patch": {
         "tags": ["Agile"],
         "requestBody": {
@@ -306,9 +306,18 @@
         }
       }
     },
-    "/auth/login/web-app": {
+    "/api/v1/Auth/login/web-app": {
       "post": {
         "tags": ["Auth"],
+        "parameters": [
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -335,7 +344,7 @@
         }
       }
     },
-    "/auth/register": {
+    "/api/v1/Auth/register": {
       "post": {
         "tags": ["Auth"],
         "requestBody": {
@@ -364,7 +373,7 @@
         }
       }
     },
-    "/auth/logout": {
+    "/api/v1/Auth/logout": {
       "post": {
         "tags": ["Auth"],
         "responses": {
@@ -374,7 +383,7 @@
         }
       }
     },
-    "/auth/me": {
+    "/api/v1/Auth/me": {
       "get": {
         "tags": ["Auth"],
         "responses": {
@@ -384,7 +393,7 @@
         }
       }
     },
-    "/cost-entries/work-packages/{workPackageId}": {
+    "/api/v1/cost-entries/work-packages/{workPackageId}": {
       "post": {
         "tags": ["CostEntries"],
         "parameters": [
@@ -511,7 +520,7 @@
         }
       }
     },
-    "/cost-entries/work-packages/{workPackageId}/{costEntryId}": {
+    "/api/v1/cost-entries/work-packages/{workPackageId}/{costEntryId}": {
       "patch": {
         "tags": ["CostEntries"],
         "parameters": [
@@ -602,7 +611,7 @@
         }
       }
     },
-    "/cost-entries/projects/{projectId}": {
+    "/api/v1/cost-entries/projects/{projectId}": {
       "get": {
         "tags": ["CostEntries"],
         "parameters": [
@@ -684,7 +693,7 @@
         }
       }
     },
-    "/cost-entries/actors/{actorUserId}": {
+    "/api/v1/cost-entries/actors/{actorUserId}": {
       "get": {
         "tags": ["CostEntries"],
         "parameters": [
@@ -766,7 +775,7 @@
         }
       }
     },
-    "/api/health": {
+    "/api/v1/Health": {
       "get": {
         "tags": ["Health"],
         "responses": {
@@ -776,7 +785,7 @@
         }
       }
     },
-    "/navigation": {
+    "/api/v1/Navigation": {
       "get": {
         "tags": ["Navigation"],
         "responses": {
@@ -793,7 +802,7 @@
         }
       }
     },
-    "/notifications": {
+    "/api/v1/Notifications": {
       "get": {
         "tags": ["Notifications"],
         "parameters": [
@@ -866,7 +875,7 @@
         }
       }
     },
-    "/notifications/{id}/read": {
+    "/api/v1/Notifications/{id}/read": {
       "patch": {
         "tags": ["Notifications"],
         "parameters": [
@@ -894,7 +903,7 @@
         }
       }
     },
-    "/notifications/read-all": {
+    "/api/v1/Notifications/read-all": {
       "patch": {
         "tags": ["Notifications"],
         "responses": {
@@ -911,7 +920,7 @@
         }
       }
     },
-    "/auth/oidc/{provider}/start": {
+    "/api/v1/auth/oidc/{provider}/start": {
       "get": {
         "tags": ["Oidc"],
         "parameters": [
@@ -931,7 +940,7 @@
         }
       }
     },
-    "/auth/oidc/{provider}/callback": {
+    "/api/v1/auth/oidc/{provider}/callback": {
       "get": {
         "tags": ["Oidc"],
         "parameters": [
@@ -963,6 +972,13 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -972,7 +988,7 @@
         }
       }
     },
-    "/projects/{projectId}/documents/upload-url": {
+    "/api/v1/projects/{projectId}/documents/upload-url": {
       "post": {
         "tags": ["ProjectDocuments"],
         "parameters": [
@@ -1019,7 +1035,7 @@
         }
       }
     },
-    "/projects/{projectId}/documents": {
+    "/api/v1/projects/{projectId}/documents": {
       "post": {
         "tags": ["ProjectDocuments"],
         "parameters": [
@@ -1122,7 +1138,7 @@
         }
       }
     },
-    "/projects/{projectId}/documents/{documentId}": {
+    "/api/v1/projects/{projectId}/documents/{documentId}": {
       "get": {
         "tags": ["ProjectDocuments"],
         "parameters": [
@@ -1194,7 +1210,41 @@
         }
       }
     },
-    "/projects": {
+    "/api/v1/Projects": {
+      "post": {
+        "tags": ["Projects"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailResponseApiResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": ["Projects"],
         "parameters": [
@@ -1257,7 +1307,52 @@
         }
       }
     },
-    "/projects/{id}": {
+    "/api/v1/Projects/{id}": {
+      "put": {
+        "tags": ["Projects"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectRequest"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectRequest"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDetailResponseApiResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
         "tags": ["Projects"],
         "parameters": [
@@ -1285,7 +1380,7 @@
         }
       }
     },
-    "/projects/{id}/members": {
+    "/api/v1/Projects/{id}/members": {
       "get": {
         "tags": ["Projects"],
         "parameters": [
@@ -1410,7 +1505,7 @@
         }
       }
     },
-    "/projects/{id}/members/{userId}": {
+    "/api/v1/Projects/{id}/members/{userId}": {
       "patch": {
         "tags": ["Projects"],
         "parameters": [
@@ -1501,7 +1596,7 @@
         }
       }
     },
-    "/reports/projects/{projectId}/time-cost": {
+    "/api/v1/Reports/projects/{projectId}/time-cost": {
       "get": {
         "tags": ["Reports"],
         "parameters": [
@@ -1576,7 +1671,7 @@
         }
       }
     },
-    "/search": {
+    "/api/v1/Search": {
       "get": {
         "tags": ["Search"],
         "parameters": [
@@ -1592,6 +1687,37 @@
             "in": "query",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "Action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "LastPrimaryId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "FirstPrimaryId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "PageToJump",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           },
           {
@@ -1625,7 +1751,7 @@
         }
       }
     },
-    "/projects/{projectId}/sprints": {
+    "/api/v1/projects/{projectId}/sprints": {
       "get": {
         "tags": ["Sprints"],
         "parameters": [
@@ -1721,7 +1847,7 @@
         }
       }
     },
-    "/projects/{projectId}/sprints/{sprintId}": {
+    "/api/v1/projects/{projectId}/sprints/{sprintId}": {
       "get": {
         "tags": ["Sprints"],
         "parameters": [
@@ -1901,7 +2027,7 @@
         }
       }
     },
-    "/time-entries/work-packages/{workPackageId}": {
+    "/api/v1/time-entries/work-packages/{workPackageId}": {
       "post": {
         "tags": ["TimeEntries"],
         "parameters": [
@@ -2021,7 +2147,7 @@
         }
       }
     },
-    "/time-entries/work-packages/{workPackageId}/{timeEntryId}": {
+    "/api/v1/time-entries/work-packages/{workPackageId}/{timeEntryId}": {
       "patch": {
         "tags": ["TimeEntries"],
         "parameters": [
@@ -2112,7 +2238,7 @@
         }
       }
     },
-    "/time-entries/projects/{projectId}": {
+    "/api/v1/time-entries/projects/{projectId}": {
       "get": {
         "tags": ["TimeEntries"],
         "parameters": [
@@ -2187,7 +2313,7 @@
         }
       }
     },
-    "/time-entries/actors/{actorUserId}": {
+    "/api/v1/time-entries/actors/{actorUserId}": {
       "get": {
         "tags": ["TimeEntries"],
         "parameters": [
@@ -2262,7 +2388,7 @@
         }
       }
     },
-    "/users": {
+    "/api/v1/Users": {
       "get": {
         "tags": ["Users"],
         "parameters": [
@@ -2314,7 +2440,7 @@
         }
       }
     },
-    "/users/{id}": {
+    "/api/v1/Users/{id}": {
       "get": {
         "tags": ["Users"],
         "parameters": [
@@ -2392,7 +2518,7 @@
         }
       }
     },
-    "/users/invite": {
+    "/api/v1/Users/invite": {
       "post": {
         "tags": ["Users"],
         "requestBody": {
@@ -2421,7 +2547,7 @@
         }
       }
     },
-    "/projects/{projectId}/wiki/pages": {
+    "/api/v1/projects/{projectId}/wiki/pages": {
       "post": {
         "tags": ["WikiPages"],
         "parameters": [
@@ -2524,7 +2650,7 @@
         }
       }
     },
-    "/projects/{projectId}/wiki/pages/{slug}": {
+    "/api/v1/projects/{projectId}/wiki/pages/{slug}": {
       "patch": {
         "tags": ["WikiPages"],
         "parameters": [
@@ -2621,7 +2747,7 @@
         }
       }
     },
-    "/work-packages": {
+    "/api/v1/work-packages": {
       "post": {
         "tags": ["WorkPackages"],
         "requestBody": {
@@ -2734,7 +2860,7 @@
         }
       }
     },
-    "/work-packages/{id}": {
+    "/api/v1/work-packages/{id}": {
       "put": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -2878,7 +3004,7 @@
         }
       }
     },
-    "/work-packages/{id}/comments": {
+    "/api/v1/work-packages/{id}/comments": {
       "post": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -2925,7 +3051,7 @@
         }
       }
     },
-    "/work-packages/{id}/comments/{commentId}": {
+    "/api/v1/work-packages/{id}/comments/{commentId}": {
       "put": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3070,7 +3196,7 @@
         }
       }
     },
-    "/work-packages/{id}/relations": {
+    "/api/v1/work-packages/{id}/relations": {
       "post": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3117,7 +3243,7 @@
         }
       }
     },
-    "/work-packages/{id}/relations/{relationId}": {
+    "/api/v1/work-packages/{id}/relations/{relationId}": {
       "delete": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3154,7 +3280,7 @@
         }
       }
     },
-    "/work-packages/{id}/watchers": {
+    "/api/v1/work-packages/{id}/watchers": {
       "post": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3201,7 +3327,7 @@
         }
       }
     },
-    "/work-packages/{id}/watchers/{userId}": {
+    "/api/v1/work-packages/{id}/watchers/{userId}": {
       "delete": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3238,7 +3364,7 @@
         }
       }
     },
-    "/work-packages/{id}/attachments": {
+    "/api/v1/work-packages/{id}/attachments": {
       "post": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3285,7 +3411,7 @@
         }
       }
     },
-    "/work-packages/{id}/attachments/upload-url": {
+    "/api/v1/work-packages/{id}/attachments/upload-url": {
       "post": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3332,7 +3458,7 @@
         }
       }
     },
-    "/work-packages/{id}/attachments/{attachmentId}": {
+    "/api/v1/work-packages/{id}/attachments/{attachmentId}": {
       "delete": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3369,7 +3495,7 @@
         }
       }
     },
-    "/work-packages/{id}/labels": {
+    "/api/v1/work-packages/{id}/labels": {
       "post": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3416,7 +3542,7 @@
         }
       }
     },
-    "/work-packages/{id}/labels/{labelId}": {
+    "/api/v1/work-packages/{id}/labels/{labelId}": {
       "delete": {
         "tags": ["WorkPackages"],
         "parameters": [
@@ -3834,6 +3960,24 @@
           "sizeInBytes": {
             "type": "integer",
             "format": "int64"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -5530,6 +5674,24 @@
           "role": {
             "type": "integer",
             "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateProjectRequest": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "nullable": true
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          },
+          "description": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

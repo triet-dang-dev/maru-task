@@ -8,8 +8,8 @@ export function PageContainer({ children }: { children: ReactNode }) {
     <Box
       sx={{
         mx: "auto",
-        px: { xs: 4, sm: 6, lg: 8 },
-        py: { xs: 8, sm: 10, lg: 12 },
+        px: { xs: 3, sm: 4, lg: 5 },
+        py: { xs: 4, sm: 5, lg: 6 },
         width: "100%",
         maxWidth: designTokens.layout.contentMaxWidth,
       }}

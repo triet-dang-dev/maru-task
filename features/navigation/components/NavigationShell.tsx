@@ -14,8 +14,6 @@ import {
   LayoutDashboard,
   ListTodo,
   LogOut,
-  Settings,
-  UsersRound,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -30,6 +28,9 @@ import {
 import { getProjects } from "@/features/projects/service";
 import type { ProjectListItem } from "@/features/projects/types";
 import { GlobalSearch } from "@/features/search/components/GlobalSearch";
+
+import { navigationTree, type NavigationTreeItem } from "../navigation-tree";
+import { ProjectScopeSelector } from "./ProjectScopeSelector";
 
 const iconProps = { size: 18, strokeWidth: 1.8 };
 
@@ -64,49 +65,75 @@ function isActive(pathname: string, href: string) {
 function getContextLabel(pathname: string) {
   if (pathname.startsWith("/projects/")) return "Project workspace";
   if (pathname === "/projects") return "Projects";
-  if (pathname === "/") return "Personal workspace";
+  if (pathname === "/my/page") return "Personal workspace";
+  if (pathname === "/home") return "Home";
   return "Dashboard";
 }
 
 function isProjectsActive(pathname: string) {
-  return pathname === "/projects";
+  return (
+    pathname === "/projects" ||
+    /^\/projects\/[^/]+$/.test(pathname) ||
+    ["active", "mine", "favorites", "archived", "status"].some((view) =>
+      pathname.startsWith(`/projects/${view}`),
+    )
+  );
 }
 
-function getProjectNavigation(pathname: string): AppShellNavigationItem[] {
-  const projectMatch = pathname.match(/^\/projects\/([^/]+)/);
-  if (!projectMatch) return [];
+function getNavigationIcon(label: string) {
+  const icons: Record<string, ReactNode> = {
+    Boards: <Columns3 {...iconProps} />,
+    "Gantt charts": <ChartGantt {...iconProps} />,
+    Home: <LayoutDashboard {...iconProps} />,
+    Meetings: <CalendarDays {...iconProps} />,
+    "My page": <LayoutDashboard {...iconProps} />,
+    "My time tracking": <Clock {...iconProps} />,
+    News: <FileText {...iconProps} />,
+    Portfolios: <FolderKanban {...iconProps} />,
+    Projects: <FolderKanban {...iconProps} />,
+    Requirements: <FileText {...iconProps} />,
+    "Time and costs": <Clock {...iconProps} />,
+    Wiki: <BookOpen {...iconProps} />,
+    "Work packages": <ListTodo {...iconProps} />,
+  };
 
-  const projectPath = `/projects/${projectMatch[1]}`;
-  const items = [
-    { href: projectPath, icon: <LayoutDashboard {...iconProps} />, label: "Overview" },
-    {
-      href: `${projectPath}/work-items`,
-      icon: <ListTodo {...iconProps} />,
-      label: "Work packages",
-    },
-    { href: `${projectPath}/boards`, icon: <Columns3 {...iconProps} />, label: "Boards" },
-    {
-      href: `${projectPath}/team-planner`,
-      icon: <UsersRound {...iconProps} />,
-      label: "Team planner",
-    },
-    { href: `${projectPath}/backlogs`, icon: <ListTodo {...iconProps} />, label: "Backlogs" },
-    { href: `${projectPath}/gantt`, icon: <ChartGantt {...iconProps} />, label: "Gantt" },
-    { href: `${projectPath}/calendar`, icon: <CalendarDays {...iconProps} />, label: "Calendar" },
-    { href: `${projectPath}/documents`, icon: <FileText {...iconProps} />, label: "Documents" },
-    { href: `${projectPath}/wiki`, icon: <BookOpen {...iconProps} />, label: "Wiki" },
-    {
-      href: `${projectPath}/reports/time-cost`,
-      icon: <Clock {...iconProps} />,
-      label: "Time and costs",
-    },
-    { href: `${projectPath}/settings`, icon: <Settings {...iconProps} />, label: "Settings" },
-  ];
+  return icons[label];
+}
 
-  return items.map((item) => ({
-    ...item,
-    active: item.href === projectPath ? pathname === projectPath : isActive(pathname, item.href),
-  }));
+function resolveNavigationHref(href: string | undefined, projectId: string | null) {
+  if (!href?.includes(":projectId")) return href;
+  return projectId ? href.replace(":projectId", projectId) : undefined;
+}
+
+function toAppShellNavigation(
+  items: NavigationTreeItem[],
+  pathname: string,
+  projectId: string | null,
+): AppShellNavigationItem[] {
+  return items.map((item) => {
+    const href = resolveNavigationHref(item.href, projectId);
+    const hasChildren = Boolean(item.children?.length);
+    const active =
+      item.label === "Projects"
+        ? isProjectsActive(pathname)
+        : href
+          ? isActive(pathname, href)
+          : false;
+
+    return {
+      active,
+      disabled: item.availability === "planned" || !href,
+      href,
+      icon: getNavigationIcon(item.label),
+      label: item.label,
+      submenu: hasChildren
+        ? {
+            items: toAppShellNavigation(item.children!, pathname, projectId),
+            title: item.label,
+          }
+        : undefined,
+    };
+  });
 }
 
 export function NavigationShell({ children }: { children: ReactNode }) {
@@ -140,12 +167,11 @@ function AuthenticatedNavigationShell({
   useEffect(() => {
     let isMounted = true;
     getProjects()
-      .then((res) => {
-        if (isMounted && res.items) {
-          setProjectList(res.items);
-        }
+      .then((response) => {
+        if (isMounted) setProjectList(response.items);
       })
       .catch(() => {});
+
     return () => {
       isMounted = false;
     };
@@ -168,59 +194,20 @@ function AuthenticatedNavigationShell({
     }
   };
 
-  const navigation: AppShellNavigationItem[] = [
-    {
-      active: isActive(pathname, "/"),
-      href: "/",
-      icon: <LayoutDashboard {...iconProps} />,
-      label: "My page",
-    },
-    {
-      active: isProjectsActive(pathname),
-      href: "/projects",
-      icon: <FolderKanban {...iconProps} />,
-      label: "Projects",
-      submenu: {
-        items: [
-          { active: pathname === "/projects", href: "/projects", label: "Active projects" },
-          { href: "/projects?view=mine", label: "My projects" },
-          { href: "/projects?view=favorites", label: "Favorite projects" },
-          { href: "/projects?view=archived", label: "Archived projects" },
-        ],
-        searchPlaceholder: "Search by name",
-        sections: [
-          ...(projectList.length > 0
-            ? [
-                {
-                  items: projectList.map((proj) => ({
-                    active: pathname.startsWith(`/projects/${proj.id}`),
-                    href: `/projects/${proj.id}`,
-                    label: proj.name,
-                  })),
-                  title: "All projects",
-                },
-              ]
-            : []),
-          {
-            items: [
-              { href: "/projects?status=on-track", label: "On track" },
-              { href: "/projects?status=off-track", label: "Off track" },
-              { href: "/projects?status=at-risk", label: "At risk" },
-            ],
-            title: "Status",
-          },
-        ],
-        title: "Projects",
-      },
-    },
-    {
-      active: pathname === "/my-work",
-      href: "/projects/42/work-items",
-      icon: <ListTodo {...iconProps} />,
-      label: "My work",
-    },
-  ];
-  const projectNavigation = getProjectNavigation(pathname);
+  const selectedProjectId = new URLSearchParams(
+    typeof window === "undefined" ? "" : window.location.search,
+  ).get("projectId");
+  const projectId = selectedProjectId ?? pathname.match(/^\/projects\/(\d+)/)?.[1] ?? null;
+  const navigation = toAppShellNavigation(navigationTree, pathname, projectId);
+
+  const updateProjectScope = (nextProjectId: string | null) => {
+    const searchParams = new URLSearchParams(window.location.search);
+    if (nextProjectId) searchParams.set("projectId", nextProjectId);
+    else searchParams.delete("projectId");
+
+    const search = searchParams.toString();
+    router.replace(search ? `${pathname}?${search}` : pathname);
+  };
 
   return (
     <AppShell
@@ -269,7 +256,13 @@ function AuthenticatedNavigationShell({
       brand="Maru Task"
       contextLabel={getContextLabel(pathname)}
       navigation={navigation}
-      projectNavigation={projectNavigation}
+      projectScope={
+        <ProjectScopeSelector
+          onChange={updateProjectScope}
+          projects={projectList}
+          value={selectedProjectId}
+        />
+      }
     >
       {children}
     </AppShell>

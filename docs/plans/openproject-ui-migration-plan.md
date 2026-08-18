@@ -339,7 +339,7 @@ calendar, authored work packages, and custom text.
 
 **Acceptance criteria:**
 
-- [x] The root route and primary navigation expose My page as the personal workspace.
+- [x] The `/my/page` route and primary navigation expose My page as the personal workspace.
 - [x] Widget data enters through typed component props with loading, error, and empty states.
 - [x] Users can add, remove, and keyboard-reorder widgets in local UI state.
 - [x] The grid collapses to one column on mobile without clipping widget controls.

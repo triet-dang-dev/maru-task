@@ -1,5 +1,9 @@
-import { redirect } from "next/navigation";
+import { PageContainer } from "@/components/layout";
 
-export default function PostLoginPage() {
-  redirect("/");
+export default function HomePage() {
+  return (
+    <PageContainer>
+      <h1>Home</h1>
+    </PageContainer>
+  );
 }

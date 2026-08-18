@@ -354,7 +354,7 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
       <SectionCardContent className="flex flex-col gap-6">
         <form
           aria-label="Create work item"
-          className="flex flex-col gap-3 md:flex-row md:items-start"
+          className="flex gap-2 md:flex-row md:items-start"
           noValidate
           onSubmit={handleSubmit(handleCreate)}
         >
@@ -374,7 +374,7 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
           </div>
 
           <Button
-            className="md:mt-6"
+            className="self-stretch"
             disabled={isCreating}
             id="create-work-item-button"
             isLoading={isCreating}
