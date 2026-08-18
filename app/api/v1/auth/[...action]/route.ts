@@ -4,18 +4,19 @@ import { z } from "zod";
 import { getMockAuthData } from "@/app/api/mock-data";
 import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
+import { UserRole } from "@/types/role";
 
 type RouteContext = { params: Promise<{ action: string[] }> };
 
 const emailLoginSchema = z.object({
-  email: z.string().trim().email(),
+  email: z.email(),
   password: z.string().min(1),
 });
 
 const registerSchema = z.object({
   displayName: z.string().trim().min(1),
-  email: z.string().trim().email(),
-  role: z.enum(["Admin", "ProjectManager", "Developer", "Viewer"]),
+  email: z.email(),
+  role: z.enum(UserRole),
 });
 
 const postRoutes = {
