@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { useToast } from "@/components/ui/Toast";
+import { getWorkItems, updateWorkItem } from "@/features/work-items/service";
 import { projectsApiService } from "@/services/api/backend-services/projects";
 
 import { ProjectTeamPlannerAddPane } from "./ProjectTeamPlannerAddPane";
@@ -50,7 +51,7 @@ export function ProjectTeamPlanner({
   projectId,
   unscheduledWorkPackages = defaultUnscheduledWorkPackages,
 }: ProjectTeamPlannerProps) {
-  const { error: toastError } = useToast();
+  const { error: toastError, success: toastSuccess } = useToast();
   const [anchorDate, setAnchorDate] = useState(() => new Date(Date.UTC(2026, 7, 17)));
   const [view, setView] = useState<TeamPlannerView>("workWeek");
   const [isAddPaneOpen, setIsAddPaneOpen] = useState(false);
@@ -59,38 +60,109 @@ export function ProjectTeamPlanner({
   const [addedAssignees, setAddedAssignees] = useState<TeamPlannerAssignee[]>([]);
   const [removedAssigneeIds, setRemovedAssigneeIds] = useState<string[]>([]);
   const [dynamicAssignees, setDynamicAssignees] = useState<TeamPlannerAssignee[] | null>(null);
+  const [dynamicUnscheduled, setDynamicUnscheduled] = useState<TeamPlannerWorkPackage[] | null>(null);
 
   useEffect(() => {
     if (!projectId) return;
     let isMounted = true;
 
-    projectsApiService
-      .listMembers({ pathParams: { projectId } })
-      .then((res: unknown) => {
-        if (!isMounted) return;
-        if (
-          res &&
-          typeof res === "object" &&
-          "items" in res &&
-          Array.isArray((res as { items: unknown[] }).items)
-        ) {
-          const rawItems = (res as { items: Array<{ id?: string; name: string; userId?: string }> })
-            .items;
-          const mapped: TeamPlannerAssignee[] = rawItems.map((member) => ({
-            id: member.id || String(member.userId ?? ""),
-            initials: member.name
-              .split(" ")
-              .map((n: string) => n[0])
-              .join("")
-              .slice(0, 2)
-              .toUpperCase(),
-            name: member.name,
-            workPackages: [],
-          }));
-          setDynamicAssignees(mapped);
+    Promise.all([
+      projectsApiService.listMembers({ pathParams: { projectId } }).catch(() => null),
+      getWorkItems(projectId).catch(() => null),
+    ]).then(([membersRes, workItemsRes]) => {
+      if (!isMounted) return;
+
+      let memberList: TeamPlannerAssignee[] = [];
+      if (
+        membersRes &&
+        typeof membersRes === "object" &&
+        "items" in membersRes &&
+        Array.isArray((membersRes as { items: unknown[] }).items)
+      ) {
+        const rawItems = (membersRes as { items: Array<{ id?: string; name: string; userId?: string }> })
+          .items;
+        memberList = rawItems.map((member) => ({
+          id: member.id || String(member.userId ?? ""),
+          initials: member.name
+            .split(" ")
+            .map((n: string) => n[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase(),
+          name: member.name,
+          workPackages: [],
+        }));
+      }
+
+      if (workItemsRes && workItemsRes.items && workItemsRes.items.length > 0) {
+        const unscheduled: TeamPlannerWorkPackage[] = [];
+        const workItems = workItemsRes.items;
+
+        if (memberList.length === 0) {
+          // Derive assignees from work items if member list was empty
+          const assigneeMap = new Map<string, TeamPlannerAssignee>();
+          workItems.forEach((it) => {
+            const assigneeName = it.assignee ?? "";
+            if (assigneeName && assigneeName !== "Unassigned") {
+              const id = it.assigneeUserId || assigneeName.toLowerCase().replace(/\s+/g, "-");
+              if (!assigneeMap.has(id)) {
+                assigneeMap.set(id, {
+                  id,
+                  initials: assigneeName
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .slice(0, 2)
+                    .toUpperCase(),
+                  name: assigneeName,
+                  workPackages: [],
+                });
+              }
+            }
+          });
+          memberList = Array.from(assigneeMap.values());
         }
-      })
-      .catch(() => {});
+
+        workItems.forEach((it) => {
+          const hasDate = Boolean(it.dueDate);
+          const assigneeName = it.assignee ?? "";
+          const hasAssignee = Boolean(assigneeName && assigneeName !== "Unassigned");
+
+          const wp: TeamPlannerWorkPackage = {
+            dueDate: it.dueDate ? it.dueDate.slice(0, 10) : "",
+            id: it.id,
+            startDate: it.startDate ? it.startDate.slice(0, 10) : it.dueDate ? it.dueDate.slice(0, 10) : "",
+            status: it.status,
+            subject: it.subject,
+            type: it.type || "Task",
+          };
+
+          if (hasDate && hasAssignee) {
+            const member = memberList.find(
+              (m) =>
+                m.id === it.assigneeUserId ||
+                m.name.toLowerCase() === assigneeName.toLowerCase(),
+            );
+            if (member) {
+              member.workPackages.push(wp);
+            } else {
+              unscheduled.push(wp);
+            }
+          } else {
+            unscheduled.push(wp);
+          }
+        });
+
+        if (memberList.length > 0) {
+          setDynamicAssignees(memberList);
+        }
+        if (unscheduled.length > 0) {
+          setDynamicUnscheduled(unscheduled);
+        }
+      } else if (memberList.length > 0) {
+        setDynamicAssignees(memberList);
+      }
+    });
 
     return () => {
       isMounted = false;
@@ -104,6 +176,11 @@ export function ProjectTeamPlanner({
   const activeBaseAssignees =
     assignees !== defaultTeamPlannerAssignees ? assignees : (dynamicAssignees ?? assignees);
 
+  const activeUnscheduled =
+    unscheduledWorkPackages !== defaultUnscheduledWorkPackages
+      ? unscheduledWorkPackages
+      : (dynamicUnscheduled ?? unscheduledWorkPackages);
+
   const visibleAssignees = useMemo(
     () => [
       ...activeBaseAssignees.filter((assignee) => !removedAssigneeIds.includes(assignee.id)),
@@ -111,6 +188,7 @@ export function ProjectTeamPlanner({
     ],
     [activeBaseAssignees, addedAssignees, removedAssigneeIds],
   );
+
   const assigneeCandidates = useMemo(
     () =>
       [...availableAssignees, ...activeBaseAssignees].filter(
@@ -120,6 +198,7 @@ export function ProjectTeamPlanner({
       ),
     [activeBaseAssignees, availableAssignees, visibleAssignees],
   );
+
   const days = useMemo(() => getPlannerDays(anchorDate, view), [anchorDate, view]);
   const selectedView = plannerViewOptions.find((option) => option.value === view)!;
 
@@ -148,6 +227,49 @@ export function ProjectTeamPlanner({
       return;
     }
     setRemovedAssigneeIds((current) => [...current, assigneeId]);
+  };
+
+  const handleScheduleWorkPackage = async (
+    workPackageId: string,
+    assigneeId: string,
+    targetDate: string,
+  ) => {
+    const targetWp = activeUnscheduled.find((w) => w.id === workPackageId);
+    if (!targetWp) return;
+
+    // Optimistic UI update
+    const scheduledWp: TeamPlannerWorkPackage = {
+      ...targetWp,
+      dueDate: targetDate,
+      startDate: targetDate,
+    };
+
+    setDynamicAssignees((prev) => {
+      const currentList = prev ?? activeBaseAssignees;
+      return currentList.map((assignee) => {
+        if (assignee.id === assigneeId) {
+          return {
+            ...assignee,
+            workPackages: [...assignee.workPackages, scheduledWp],
+          };
+        }
+        return assignee;
+      });
+    });
+
+    setDynamicUnscheduled((prev) => (prev ?? activeUnscheduled).filter((w) => w.id !== workPackageId));
+
+    try {
+      if (projectId) {
+        await updateWorkItem(workPackageId, {
+          assigneeUserId: assigneeId,
+          dueDate: targetDate,
+        });
+      }
+      toastSuccess("Work package scheduled on timeline");
+    } catch (err) {
+      toastError(err instanceof Error ? err.message : "Failed to schedule work package");
+    }
   };
 
   if (isLoading) return <LoadingState label="Loading team planner" />;
@@ -216,7 +338,12 @@ export function ProjectTeamPlanner({
         </Paper>
 
         {isAddPaneOpen ? (
-          <ProjectTeamPlannerAddPane projectId={projectId} workPackages={unscheduledWorkPackages} />
+          <ProjectTeamPlannerAddPane
+            assignees={visibleAssignees}
+            onScheduleWorkPackage={handleScheduleWorkPackage}
+            projectId={projectId}
+            workPackages={activeUnscheduled}
+          />
         ) : null}
       </Stack>
     </Box>

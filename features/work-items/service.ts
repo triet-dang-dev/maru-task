@@ -91,6 +91,8 @@ export async function updateWorkItem(
     description?: string;
     dueDate?: string | null;
     priorityId?: string;
+    status?: string;
+    statusId?: string;
     subject?: string;
   },
 ): Promise<void> {

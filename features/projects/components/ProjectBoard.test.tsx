@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
+import { ToastProvider } from "@/components/ui/Toast";
 import { ProjectBoard } from "./ProjectBoard";
 
 describe("ProjectBoard", () => {
@@ -76,5 +77,21 @@ describe("ProjectBoard", () => {
     await user.type(screen.getByLabelText("Work package subject"), "Confirm incident runbook");
     await user.click(screen.getByRole("button", { name: "Add to board" }));
     expect(screen.getByText("Confirm incident runbook")).toBeInTheDocument();
+  });
+
+  it("moves a work package to the next lane and shows feedback", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <ToastProvider>
+        <ProjectBoard projectId="proj-1" />
+      </ToastProvider>,
+    );
+
+    const moveButton = screen.getByRole("button", { name: "Move WP-138 to In progress" });
+    await user.click(moveButton);
+
+    expect(await screen.findByText("Moved WP-138 to In progress")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "In progress 3" })).toBeInTheDocument();
   });
 });

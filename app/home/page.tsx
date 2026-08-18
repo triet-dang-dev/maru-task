@@ -1,9 +1,11 @@
 import { PageContainer } from "@/components/layout";
+import { HomePageContent } from "@/features/home/components/HomePageContent";
 
 export default function HomePage() {
   return (
     <PageContainer>
-      <h1>Home</h1>
+      <HomePageContent />
     </PageContainer>
   );
 }
+

@@ -5,6 +5,7 @@ import HomePage from "./page";
 
 vi.mock("next/navigation", () => ({
   redirect: vi.fn(),
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn() }),
 }));
 
 vi.mock("@/features/my-page/service", () => ({
@@ -12,7 +13,14 @@ vi.mock("@/features/my-page/service", () => ({
     calendarEvents: [],
     favoriteProjects: [],
     spentTime: [],
-    workPackages: [],
+    workPackages: [
+      {
+        id: "work-1",
+        projectId: "proj-1",
+        status: "Open",
+        subject: "Implement task",
+      },
+    ],
   }),
 }));
 

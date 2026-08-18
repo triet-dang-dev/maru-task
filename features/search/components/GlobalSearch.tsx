@@ -4,8 +4,8 @@ import Box from "@mui/material/Box";
 import Chip from "@mui/material/Chip";
 import FormControl from "@mui/material/FormControl";
 import IconButton from "@mui/material/IconButton";
-import InputLabel from "@mui/material/InputLabel";
 import InputBase from "@mui/material/InputBase";
+import InputLabel from "@mui/material/InputLabel";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Select from "@mui/material/Select";
@@ -13,9 +13,14 @@ import Skeleton from "@mui/material/Skeleton";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Search, X } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+import { getProjects } from "@/features/projects/service";
+import { getWorkItems } from "@/features/work-items/service";
 
 export interface GlobalSearchResult {
+  href?: string;
   id: string;
   project: string;
   status: string;
@@ -32,6 +37,7 @@ interface GlobalSearchProps {
 
 const defaultResults: GlobalSearchResult[] = [
   {
+    href: "/projects",
     id: "WP-142",
     project: "Migration",
     status: "In progress",
@@ -39,6 +45,7 @@ const defaultResults: GlobalSearchResult[] = [
     type: "Task",
   },
   {
+    href: "/projects",
     id: "WP-138",
     project: "Migration",
     status: "Open",
@@ -51,14 +58,82 @@ export function GlobalSearch({
   error,
   isLoading = false,
   onResultSelect,
-  results = defaultResults,
+  results: initialResults,
 }: GlobalSearchProps) {
+  let router: ReturnType<typeof useRouter> | null = null;
+  try {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    router = useRouter();
+  } catch {}
+
   const [isFocused, setIsFocused] = useState(false);
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState("all");
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
+  const [liveResults, setLiveResults] = useState<GlobalSearchResult[]>(defaultResults);
+
+  useEffect(() => {
+    if (initialResults) {
+      setLiveResults(initialResults);
+      return;
+    }
+
+    let isMounted = true;
+    getProjects()
+      .then(async (projectsRes) => {
+        if (!isMounted) return;
+        const projects = projectsRes.items.slice(0, 3);
+        const workItemResults = await Promise.all(
+          projects.map((p) =>
+            getWorkItems(p.id).catch(() => ({
+              hasItems: false,
+              items: [],
+              page: 1,
+              pageSize: 10,
+              total: 0,
+            })),
+          ),
+        );
+
+        if (!isMounted) return;
+        const mapped: GlobalSearchResult[] = [];
+
+        projects.forEach((p, idx) => {
+          mapped.push({
+            href: `/projects/${p.id}`,
+            id: p.code || p.id,
+            project: p.name,
+            status: p.status || "Active",
+            subject: p.name,
+            type: "Project",
+          });
+
+          const items = workItemResults[idx]?.items || [];
+          items.slice(0, 3).forEach((item) => {
+            mapped.push({
+              href: `/projects/${p.id}/work-items`,
+              id: item.id,
+              project: p.name,
+              status: item.status,
+              subject: item.subject,
+              type: "Work Package",
+            });
+          });
+        });
+
+        if (mapped.length > 0) {
+          setLiveResults(mapped);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [initialResults]);
+
   const isExpanded = isFocused || query.length > 0;
-  const matchingResults = results.filter((result) =>
+  const matchingResults = liveResults.filter((result) =>
     `${result.id} ${result.project} ${result.status} ${result.subject} ${result.type}`
       .toLowerCase()
       .includes(query.trim().toLowerCase()),
@@ -68,6 +143,15 @@ export function GlobalSearch({
     setIsFocused(false);
     setQuery("");
     setSelectedResultIndex(0);
+  };
+
+  const handleSelect = (result: GlobalSearchResult) => {
+    if (onResultSelect) {
+      onResultSelect(result.id);
+    } else if (result.href) {
+      router?.push(result.href);
+    }
+    closeSearch();
   };
 
   return (
@@ -80,8 +164,8 @@ export function GlobalSearch({
         direction="row"
         sx={{
           alignItems: "center",
-          border: 1,
           bgcolor: "rgba(255, 255, 255, 0.08)",
+          border: 1,
           borderColor: "rgba(255, 255, 255, 0.72)",
           borderRadius: 1,
           minHeight: 32,
@@ -115,7 +199,7 @@ export function GlobalSearch({
             }
             if (event.key === "Enter" && query.trim() && matchingResults[selectedResultIndex]) {
               event.preventDefault();
-              onResultSelect?.(matchingResults[selectedResultIndex].id);
+              handleSelect(matchingResults[selectedResultIndex]);
             }
           }}
           placeholder="Search"
@@ -181,14 +265,15 @@ export function GlobalSearch({
                       aria-selected={index === selectedResultIndex}
                       component="li"
                       key={result.id}
+                      onClick={() => handleSelect(result)}
                       onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => onResultSelect?.(result.id)}
                       role="option"
                       sx={{
                         bgcolor: index === selectedResultIndex ? "action.selected" : "transparent",
                         borderRadius: 1,
                         cursor: "pointer",
                         p: 1.5,
+                        "&:hover": { bgcolor: "action.hover" },
                       }}
                     >
                       <Stack
@@ -221,7 +306,7 @@ export function GlobalSearch({
             </Stack>
           ) : (
             <Stack component="ul" spacing={1} sx={{ listStyle: "none", m: 0, mt: 1, p: 0 }}>
-              {defaultResults.map((result) => (
+              {liveResults.slice(0, 3).map((result) => (
                 <Typography component="li" key={result.id} variant="body2">
                   {result.id} {result.subject}
                 </Typography>

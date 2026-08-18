@@ -1,6 +1,17 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("@/features/work-items/service", () => ({
+  getWorkItems: vi.fn().mockResolvedValue({
+    hasItems: true,
+    items: [],
+    page: 1,
+    pageSize: 10,
+    total: 0,
+  }),
+  updateWorkItem: vi.fn().mockResolvedValue(undefined),
+}));
 
 import { ToastProvider } from "@/components/ui/Toast";
 import { ProjectTeamPlanner } from "./ProjectTeamPlanner";
@@ -93,5 +104,25 @@ describe("ProjectTeamPlanner", () => {
     expect(screen.getByRole("rowheader", { name: "Alex Morgan" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Remove Alex Morgan" }));
     expect(screen.queryByRole("rowheader", { name: "Alex Morgan" })).not.toBeInTheDocument();
+  });
+
+  it("schedules an unscheduled work package onto an assignee timeline", async () => {
+    const user = userEvent.setup();
+    render(
+      <ToastProvider>
+        <ProjectTeamPlanner projectId="42" />
+      </ToastProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Add existing" }));
+    const search = screen.getByRole("searchbox", { name: "Search existing work packages" });
+    await user.type(search, "incident");
+
+    expect(screen.getByText("Confirm incident response owners")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Schedule on timeline" }));
+    expect(screen.getByRole("button", { name: "Schedule" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Schedule" }));
+    expect(await screen.findByText("Work package scheduled on timeline")).toBeInTheDocument();
   });
 });

@@ -7,7 +7,10 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { CalendarDays, GitCommit, MessageSquare, Pencil, Plus, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+import { getWorkItems } from "@/features/work-items/service";
+import type { WorkItemListItem } from "@/features/work-items/types";
 
 const eventTypes = {
   commented: { color: "#6e7781", icon: <MessageSquare size={14} />, label: "commented on" },
@@ -164,12 +167,63 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
 }
 
 export function ProjectActivity({
-  events = defaultEvents,
+  events: initialEvents,
   projectId,
 }: {
   events?: ActivityEvent[];
   projectId?: string;
 }) {
+  const [workItems, setWorkItems] = useState<WorkItemListItem[]>([]);
+
+  useEffect(() => {
+    if (!projectId) return;
+    let isMounted = true;
+    getWorkItems(projectId)
+      .then((res) => {
+        if (isMounted && res.items) {
+          setWorkItems(res.items);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [projectId]);
+
+  const events = useMemo(() => {
+    if (initialEvents) return initialEvents;
+    if (workItems.length === 0) return defaultEvents;
+
+    const mapped: ActivityEvent[] = [];
+    workItems.forEach((item, index) => {
+      const href = projectId ? `/projects/${projectId}/work-items` : "#";
+      if (index % 2 === 0) {
+        mapped.push({
+          actor: "Team Member",
+          detail: `Status: ${item.status}`,
+          id: `live-evt-${item.id}-status`,
+          target: `#${item.id} · ${item.subject}`,
+          targetHref: href,
+          timestamp: index === 0 ? "Today at 15:30" : "Yesterday at 11:20",
+          type: "statusChanged",
+        });
+      } else {
+        mapped.push({
+          actor: "Project Contributor",
+          detail: "Created work package",
+          id: `live-evt-${item.id}-create`,
+          target: `#${item.id} · ${item.subject}`,
+          targetHref: href,
+          timestamp: "Yesterday at 09:15",
+          type: "created",
+        });
+      }
+    });
+
+    return mapped;
+  }, [initialEvents, workItems, projectId]);
+
   const groups = useMemo(() => groupByDate(events), [events]);
 
   return (

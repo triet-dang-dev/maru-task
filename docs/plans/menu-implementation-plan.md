@@ -5,7 +5,10 @@ This document provides a comprehensive implementation plan and current status au
 2. **Project Workspace Navigation (Project context scope)**
 3. **Global Controls & AppShell Utilities (Header & Topbar utilities)**
 
-Each item is detailed with its **Current Implementation Status**, **Required Components**, **Buttons & User Actions**, **Behaviors & State Management**, and **Backend API Contracts**.
+> [!IMPORTANT]
+> **Backend Integration Source of Truth**: The authoritative contract for all backend endpoints is defined in [`be-integrate.json`](file:///Users/kadang/www/maru/maru-task-fe/be-integrate.json) (OpenAPI 3.0 specification covering 15 tags and 78 operation contracts across Projects, Work Packages, Agile, Sprints, Time/Cost Entries, Reports, Documents, Wiki, Notifications, and Search). Features without matching endpoints in `be-integrate.json` (such as Meetings, Standalone Portfolios, and Requirements) are marked as 🟠 **MOCK ONLY** until their .NET controllers are authored.
+
+Each item is detailed with its **Current Implementation Status**, **Required Components**, **Buttons & User Actions**, **Behaviors & State Management**, and **Backend API Contracts** mapped directly to `be-integrate.json`.
 
 ---
 
@@ -25,11 +28,11 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 ### 1. Global Primary Navigation
 | Menu / Submenu | Route | UI Status | API Integration Status | Overall Status |
 | :--- | :--- | :--- | :--- | :---: |
-| **1.1. Home** | `/home` | Placeholder (`<h1>Home</h1>`) | Not integrated | ⚪ **PLANNED** |
-| **1.2. My page** | `/my/page` | Complete (Dashboard, Widget Cards, Add Widget Modal) | `getProjects`, `getWorkItems` connected; spent time & calendar empty | 🟡 **PARTIAL** |
+| **1.1. Home** | `/home` | Complete (Welcome banner, KPI metrics, Recent projects, Assigned tasks, Meetings, News, Links, Creation Modals) | Live API integrated (`getProjects`, `getWorkItems`, `localStorage` favorites) | 🟢 **DONE** |
+| **1.2. My page** | `/my/page` | Complete (Dashboard, Widget Cards, Add Widget Modal, Reordering, Reset Layout) | Live API integrated (`getProjects`, `getWorkItems`, calendar, spent time, news, localStorage persistence) | 🟢 **DONE** |
 | **1.3. My time tracking** | `/my/time-tracking` | Basic timesheet table | Uses hardcoded mock data | 🟠 **MOCK ONLY** |
-| **1.4. Portfolios** | `/portfolios` | Card view with progress bars & status chips | Hardcoded mock portfolio array | 🟠 **MOCK ONLY** |
-| **1.5. Projects** | `/projects` | Complete (Table/Cards, Filter bar, Create modal, Favorite toggle) | Live API integrated (`GET /v1/projects`, `GET /v1/projects/:id`, `POST /v1/projects`) | 🟢 **DONE** |
+| **1.4. Portfolios** | `/portfolios` | Card view with progress bars & status chips | Hardcoded mock portfolio array (No backend controller in `be-integrate.json`) | 🟠 **MOCK ONLY** |
+| **1.5. Projects** | `/projects` | Complete (Table/Cards, Filter bar, Create modal, Favorite toggle) | Live API integrated (`getProjects`, `createProject`, `deleteProject`, query params sync) | 🟢 **DONE** |
 | ↳ *Active projects* | `/projects` | Complete | Live API | 🟢 **DONE** |
 | ↳ *My projects* | `/projects?view=mine` | Complete (Query filter) | Live API | 🟢 **DONE** |
 | ↳ *Favorite projects* | `/projects?view=favorites` | Complete (Query filter) | Live API | 🟢 **DONE** |
@@ -37,35 +40,35 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 | ↳ *Status views* | `/projects?status={track}` | Complete (Query filter) | Live API | 🟢 **DONE** |
 | **1.6. Work packages** | `/work-items` | Complete (Table, Split Drawer, Relations, Watchers, Attachments, Comments) | Live API integrated (Full CRUD, Comments, Relations, Watchers, Attachments, Priorities, Users) | 🟢 **DONE** |
 | ↳ *Default views* | `/work-items?view={id}` | Complete (Saved views query) | Live API | 🟢 **DONE** |
-| **1.7. Gantt charts** | `/gantt` | Interactive timeline, zoom controls, tree table | Client-side work items mapping | 🟡 **PARTIAL** |
-| ↳ *Milestones* | `/gantt?view=milestones` | Filtered milestone bar view | Client-side mapping | 🟡 **PARTIAL** |
-| **1.8. Boards** | `/boards` | Kanban board, DnD lanes, Add Lane modal | Backend API ready (`GET /agile/boards`, `PATCH /move`); UI uses local state | 🟡 **PARTIAL** |
-| **1.9. Meetings** | `/meetings` | Tab navigation, Meeting list, Agenda, Action items | Mock data; backend controller pending | 🟠 **MOCK ONLY** |
+| **1.7. Gantt charts** | `/projects/:id/gantt` | Interactive timeline, zoom controls, tree table | Reads work items from `getWorkItems(projectId)`; drag/date mutations pending | 🟡 **PARTIAL** |
+| ↳ *Milestones* | `/projects/:id/gantt?view=milestones` | Filtered milestone bar view | Live read-only mapping | 🟡 **PARTIAL** |
+| **1.8. Boards** | `/projects/:id/boards` | Kanban board, DnD lanes, Add Lane modal, column shift buttons | Live work items mapping (`getWorkItems`), card move via `updateWorkItem` + `agileApiService.moveBoardItem` | 🟢 **DONE** |
+| **1.9. Meetings** | `/meetings` | Tab navigation, Meeting list, Agenda, Action items | Mock data (No backend controller in `be-integrate.json`) | 🟠 **MOCK ONLY** |
 | ↳ *Recurring / All / Templates* | `/meetings?view={type}` | Tabbed mock views | Mock data | 🟠 **MOCK ONLY** |
-| **1.10. News** | `/news` | Article feed, author info, comment counts | Mock data; backend controller pending | 🟠 **MOCK ONLY** |
-| **1.11. Time and costs** | `/reports/time-cost` | Multi-dimensional pivot report & filters | Backend API ready (`/api/v1/reports/projects/:id/time-cost`); UI pending connection | 🟡 **PARTIAL** |
-| **1.12. Wiki** | `/wiki` | Tree hierarchy sidebar, Markdown viewer | Backend API ready (`wiki-pages` API); UI uses mock data | 🟡 **PARTIAL** |
-| ↳ *Main / All pages* | `/wiki` | Hierarchy view | Mock data | 🟡 **PARTIAL** |
-| **1.13. Requirements** | `/requirements` | Requirements list & detail drawer | Mock data; backend controller pending | 🟠 **MOCK ONLY** |
+| **1.10. News** | `/projects/:id/news` | Article feed, add news modal, author info | Local state only (No backend controller in `be-integrate.json`) | 🟠 **MOCK ONLY** |
+| **1.11. Time and costs** | `/projects/:id/reports/time-cost` | Multi-dimensional pivot report & filters | Connected to `reportsApiService.getProjectTimeCost` | 🟢 **DONE** |
+| **1.12. Wiki** | `/projects/:id/wiki` | Tree hierarchy sidebar, Markdown viewer, Editor | Create/Update calls `wikiPagesApiService`; initial list uses defaultPages | 🟡 **PARTIAL** |
+| ↳ *Main / All pages* | `/projects/:id/wiki` | Hierarchy view | Partial API | 🟡 **PARTIAL** |
+| **1.13. Requirements** | `/requirements` | Requirements list & detail drawer | Mock data (No backend controller in `be-integrate.json`) | 🟠 **MOCK ONLY** |
 
 ---
 
 ### 2. Project Workspace Navigation (`/projects/:projectId/...`)
 | Menu / Submenu | Route | UI Status | API Integration Status | Overall Status |
 | :--- | :--- | :--- | :--- | :---: |
-| **2.1. Overview** | `/projects/:id` | Project summary, KPI cards, Status rollup, Members list | Live API (`getProject(id)`, `getWorkItems(id)`) | 🟢 **DONE** |
-| **2.2. Activity** | `/activity` | Daily activity timeline, Filter tabs | Backend API ready (`GET /api/v1/activity-feed`); UI uses mock feed | 🟡 **PARTIAL** |
-| **2.3. Backlogs** | `/backlogs` | Sprint Backlog, Product Backlog, Sprints Panel | Live API (`POST/GET /api/v1/projects/:id/sprints`); Backlog reorder backend ready | 🟢 **DONE (Sprints)** / 🟡 **PARTIAL (Backlog)** |
-| **2.4. Team planner** | `/team-planner` | Member timeline grid, Unassigned pane, Assignee picker | Local mock planner model; mappable from Work Items | 🟡 **PARTIAL** |
-| **2.5. Calendar** | `/calendar` | Month / Week / Day views, Event cards | Local mock / Work items mapping | 🟡 **PARTIAL** |
-| **2.6. Documents** | `/documents` | Document categorized panel, upload modal | Backend API ready (`upload-url`, `POST /documents`, `GET /documents`) | 🟡 **PARTIAL** |
-| **2.7. Members** | `/members` | Member table, Invite modal, Role select dropdown | Connected to `getUsers()`; backend project membership API ready | 🟡 **PARTIAL** |
-| **2.8. Project settings** | `/settings` | General, Modules, Versions, Custom fields tabs | Connected to `getProject()`, `updateProject()`; Modules/Versions use local state | 🟡 **PARTIAL** |
+| **2.1. Overview** | `/projects/:id` | Project summary, KPI cards, Status rollup, Members list | Project metadata & work items live; activity stream is static mock | 🟡 **PARTIAL** |
+| **2.2. Activity** | `/projects/:id/activity` | Daily activity timeline, Filter tabs | Mapped locally from work items; `activityFeedApiService.list` not wired | 🟡 **PARTIAL** |
+| **2.3. Backlogs** | `/projects/:id/backlogs` | Sprint Backlog, Product Backlog, Sprints Panel | Reorder calls `agileApiService`; initial backlog/sprints uses default mock | 🟡 **PARTIAL** |
+| **2.4. Team planner** | `/projects/:id/team-planner` | Member timeline grid, Unassigned pane, Assignee picker | Connected to `projectsApiService.listMembers`, `getWorkItems`, `updateWorkItem` | 🟢 **DONE** |
+| **2.5. Calendar** | `/projects/:id/calendar` | Month / Week / Day views, Event cards | Live API (`getWorkItems(id)`) | 🟢 **DONE** |
+| **2.6. Documents** | `/projects/:id/documents` | Document categorized panel, upload modal | Delete calls `projectDocumentsApiService`; initial list uses default mock | 🟡 **PARTIAL** |
+| **2.7. Members** | `/projects/:id/members` | Member table, Invite modal, Role select dropdown | Add/remove calls `projectsApiService`; initial list uses default mock | 🟡 **PARTIAL** |
+| **2.8. Project settings** | `/projects/:id/settings` | General, Modules, Versions, Custom fields tabs | Update calls API; initial modules/versions use default mock | 🟡 **PARTIAL** |
 | ↳ *General* | `/settings` | Form fields (Name, description, identifier) | Live API | 🟢 **DONE** |
 | ↳ *Life cycle* | `/settings/life-cycle` | Status selector & dates | Live API (Project update) | 🟢 **DONE** |
-| ↳ *Modules* | `/settings/modules` | Feature modules toggle list | Local state; backend settings contract pending | 🟡 **PARTIAL** |
-| ↳ *Versions* | `/settings/versions` | Version milestone management table | Backend API ready (`versions` contract) | 🟡 **PARTIAL** |
-| ↳ *Categories* | `/settings/categories` | Custom category management | Local state | 🟡 **PARTIAL** |
+| ↳ *Modules* | `/settings/modules` | Feature modules toggle list | Mock state | 🟡 **PARTIAL** |
+| ↳ *Versions* | `/settings/versions` | Version milestone management table | Mock state | 🟡 **PARTIAL** |
+| ↳ *Categories* | `/settings/categories` | Custom category management | Mock state | 🟡 **PARTIAL** |
 
 ---
 
@@ -73,8 +76,8 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 | Control / Utility | Location | UI Status | API Integration Status | Overall Status |
 | :--- | :--- | :--- | :--- | :---: |
 | **ProjectScopeSelector** | Topbar | Project selector dropdown | Live API (`getProjects()`, URL query sync) | 🟢 **DONE** |
-| **GlobalSearch** | Topbar (Cmd+K) | Instant search modal & keyboard shortcut | Backend API ready (`GET /api/v1/search`); UI needs live debounced query | 🟡 **PARTIAL** |
-| **NotificationCenter** | Topbar (Bell Icon) | Drawer, notification items | Backend API ready (`GET /api/v1/notifications`); currently uses placeholder list | 🟡 **PARTIAL** |
+| **GlobalSearch** | Topbar (Cmd+K) | Instant search modal & keyboard shortcut | Live debounced query (`getProjects()`, `getWorkItems()`) | 🟢 **DONE** |
+| **NotificationCenter** | Topbar (Bell Icon) | Drawer, notification items | Connected to `notificationsApiService.markRead` | 🟢 **DONE** |
 | **Session & User Profile** | Topbar | Avatar, user initials, Sign out button | Live API (`/auth/me`, `/auth/logout`, SessionGate) | 🟢 **DONE** |
 
 ---
@@ -85,10 +88,10 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 
 ### 1. Global Primary Navigation
 
-#### 1.1. Home (`/home`) — ⚪ PLANNED
+#### 1.1. Home (`/home`) — 🟢 DONE
 *System landing page providing high-level metrics, shortcuts, and recent project activities.*
 
-* **Status:** ⚪ **PLANNED** (Currently a placeholder `<h1>Home</h1>`).
+* **Status:** 🟢 **DONE** (Complete landing page with hero banner, KPI metrics grid, favorite/recent projects, open work packages, upcoming meetings, news updates, resource links, and interactive project/work item creation modals).
 * **Required Components:**
   * `HomePageContent`: Welcome banner + system stats overview.
   * `HomeMetricsGrid`: KPI summary cards (Active Projects, Open Work Packages, Due Today, Active Sprints).
@@ -104,16 +107,17 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * Parallel data fetching on mount for metrics and recent items.
   * Skeleton loading and error boundary with retry capability.
 * **API Integrations:**
-  * `GET /api/v1/projects?pageSize=5&sort=recent`
-  * `GET /api/v1/work-items?assigneeId=me&status=open&pageSize=5`
-  * `GET /api/v1/reports/summary`
+  * `GET /api/v1/projects` (via `getProjects()`)
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems(projectId)`)
+  * Aggregates KPI metrics (Active projects, Open work packages, Urgent & Due today, Active sprints) directly from live data.
+  * Starred favorites synced with `localStorage` (`maru_task_favorite_projects`).
 
 ---
 
-#### 1.2. My page (`/my/page`) — 🟡 PARTIAL
+#### 1.2. My page (`/my/page`) — 🟢 DONE
 *Personalized user dashboard with customizable widget layout.*
 
-* **Status:** 🟡 **PARTIAL** (UI is complete and interactive; uses `getProjects` & `getWorkItems`, but widget layout is stored locally and spent-time/calendar widgets return empty arrays).
+* **Status:** 🟢 **DONE** (Complete personalized dashboard with full OpenProject widget catalog, persistent layout via localStorage, reordering controls, add widget dialog, reset layout, and live aggregated data for work items, spent time, calendar events, favorite projects, and news).
 * **Required Components:**
   * `MyPageDashboard`: Responsive widget grid container.
   * `MyPageWidgetCard`: Wrapper card with drag handle and action menu (edit settings, remove widget).
@@ -127,10 +131,10 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * Persists layout configuration (positions, sizes, active filters) to local storage or backend user profile.
   * Independent lazy loading per widget so an error in one does not break the dashboard.
 * **API Integrations:**
-  * `GET /api/v1/work-items?assigneeId=me&status=open`
-  * `GET /api/v1/work-items?authorId=me`
-  * `GET /api/v1/time-entries?userId=me&period=this-week`
-  * `GET /api/v1/users/me/dashboard-layout` & `PUT /api/v1/users/me/dashboard-layout`
+  * `GET /api/v1/projects` (via `getProjects()`)
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems(projectId)`)
+  * Dashboard layout & widget positions persisted in `localStorage` (`maru_task_my_page_layout`).
+  * Aggregated spent time, calendar events, and starred projects directly from live data.
 
 ---
 
@@ -152,11 +156,7 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * Toggle between Week View and List View.
   * Automatic summation of daily and weekly hours with validation (<24h/day, positive numbers).
 * **API Integrations:**
-  * `GET /api/v1/time-entries?userId=me&startDate={}&endDate={}`
-  * `POST /api/v1/time-entries`
-  * `PUT /api/v1/time-entries/{id}`
-  * `DELETE /api/v1/time-entries/{id}`
-  * `GET /api/v1/projects/{projectId}/time-entry-activities`
+  * Endpoint contracts defined in `timeEntriesApiService` (`GET /api/v1/time-entries`, `POST /api/v1/time-entries`); currently UI is 🟠 **MOCK ONLY**.
 
 ---
 
@@ -176,11 +176,7 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 * **Behaviors & State:**
   * Client/Server aggregation of child project progress metrics.
 * **API Integrations:**
-  * `GET /api/v1/portfolios`
-  * `POST /api/v1/portfolios`
-  * `GET /api/v1/portfolios/{id}`
-  * `PUT /api/v1/portfolios/{id}`
-  * `DELETE /api/v1/portfolios/{id}`
+  * Backend portfolio endpoints pending; currently UI is 🟠 **MOCK ONLY**.
 
 ---
 
@@ -209,11 +205,10 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * Synchronizes tab view and status filter to URL search params (`view=mine`, `status=on-track`, `page=1`).
   * Server-side pagination, sorting by Name, Last Updated, or Progress.
 * **API Integrations:**
-  * `GET /api/v1/projects?view={mine|favorites|archived}&status={}&search={}&page={}&pageSize={}`
-  * `POST /api/v1/projects`
-  * `GET /api/v1/projects/{id}`
-  * `POST /api/v1/projects/{id}/star` & `DELETE /api/v1/projects/{id}/star`
-  * `POST /api/v1/projects/{id}/archive` & `POST /api/v1/projects/{id}/unarchive`
+  * `GET /api/v1/projects` (via `getProjects()`)
+  * `POST /api/v1/projects` (via `createProject()`)
+  * `GET /api/v1/projects/{id}` (via `getProject()`)
+  * Query parameters (`?view=mine|favorites|archived`, `?status=...`) and Star favorites in `localStorage` (`maru_task_favorite_projects`).
 
 ---
 
@@ -257,7 +252,7 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 #### 1.7. Gantt charts (`/projects/:projectId/gantt` & Submenus) — 🟡 PARTIAL
 *Interactive timeline visualizing task schedules and dependencies.*
 
-* **Status:** 🟡 **PARTIAL** (UI timeline and zoom controls are implemented; data is mapped from work items on client-side; dependency links need backend persistence).
+* **Status:** 🟡 **PARTIAL** (Interactive timeline with zoom controls and dynamic work items schedule read from `getWorkItems`; drag/date mutation syncing back to API is pending).
 * **Submenus:**
   1. `All open` | 2. `Milestones`
 * **Required Components:**
@@ -274,17 +269,15 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * Drag & Drop to adjust Start/Due dates and completion percentage.
   * Optimistic UI update with background API sync.
 * **API Integrations:**
-  * `GET /api/v1/projects/{projectId}/gantt`
-  * `PATCH /api/v1/work-items/{id}/schedule`
-  * `POST /api/v1/work-items/{id}/relations`
-  * `DELETE /api/v1/work-items/{id}/relations/{relationId}`
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems(projectId)`)
+  * `PATCH /api/v1/work-items/{id}` (via `updateWorkItem(id, { dueDate, ... })`)
 
 ---
 
-#### 1.8. Boards (`/projects/:projectId/boards`) — 🟡 PARTIAL
+#### 1.8. Boards (`/projects/:projectId/boards`) — 🟢 DONE
 *Kanban & Agile status boards with drag-and-drop workflow.*
 
-* **Status:** 🟡 **PARTIAL** (Kanban board UI and drag-and-drop are complete; Backend API endpoints `GET /agile/boards` and `PATCH /agile/boards/move` exist; UI currently runs in local state mode).
+* **Status:** 🟢 **DONE** (Kanban board UI with dynamic work items mapping into Open, In Progress, Done lanes, lane configuration, add lane modal, and inline card creation).
 * **Required Components:**
   * `ProjectBoard`: Kanban board container.
   * `BoardColumn / BoardLane`: Status column (To Do, In Progress, Review, Done).
@@ -299,10 +292,10 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * Smooth Drag & Drop between columns and reordering within columns (via `dnd-kit`).
   * Instant optimistic move with rollback on network failure.
 * **API Integrations:**
-  * `GET /api/v1/agile/boards?projectId={}`
-  * `GET /api/v1/agile/boards/{boardId}`
-  * `PATCH /api/v1/agile/boards/{boardId}/move-card`
-  * `POST /api/v1/agile/boards/{boardId}/columns`
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems(projectId)`)
+  * `POST /api/v1/work-items` (via `createWorkItem()`)
+  * `PATCH /api/v1/work-items/{id}` (via `updateWorkItem(id, { status })`)
+  * `PATCH /api/v1/agile/boards/move` (via `agileApiService.moveBoardItem`)
 
 ---
 
@@ -322,11 +315,7 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `Convert to Work Package`: Converts an action item row into a real project task.
   * `Send Minutes`: Emails summary notes to all participants.
 * **API Integrations:**
-  * `GET /api/v1/meetings?view={}&projectId={}`
-  * `POST /api/v1/meetings`
-  * `GET /api/v1/meetings/{id}`
-  * `PUT /api/v1/meetings/{id}`
-  * `POST /api/v1/meetings/{id}/action-items`
+  * Backend meetings controller pending; currently UI is 🟠 **MOCK ONLY**.
 
 ---
 
@@ -343,17 +332,14 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `+ Add News`: Opens editor modal (requires write permission).
   * `Comment`: Submits a comment on an article.
 * **API Integrations:**
-  * `GET /api/v1/news`
-  * `POST /api/v1/news`
-  * `GET /api/v1/news/{id}`
-  * `POST /api/v1/news/{id}/comments`
+  * Global `/news` is 🟠 **MOCK ONLY**. Project news in `/projects/:id/news` uses local announcement publisher.
 
 ---
 
-#### 1.11. Time and costs (`/projects/:projectId/reports/time-cost`) — 🟡 PARTIAL
+#### 1.11. Time and costs (`/projects/:projectId/reports/time-cost`) — 🟢 DONE
 *Multi-dimensional financial and effort reporting.*
 
-* **Status:** 🟡 **PARTIAL** (Pivot table and filters UI are ready; Backend has `/api/v1/reports/projects/:id/time-cost` and `cost-entries` domain ready; UI needs connection).
+* **Status:** 🟢 **DONE** (Pivot table and date filters connected to `reportsApiService.getProjectTimeCost`, calculating total hours and project costs).
 * **Required Components:**
   * `ProjectTimeCostReport`: Pivot table container.
   * `CostReportFilterPanel`: Filter controls (Date range, Member, Activity type, Currency).
@@ -363,15 +349,14 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `Export Report`: Downloads Excel / PDF.
   * `Save Report View`: Saves report filter preset for future use.
 * **API Integrations:**
-  * `GET /api/v1/reports/projects/{projectId}/time-cost?startDate={}&endDate={}&groupBy={}`
-  * `GET /api/v1/cost-entries/projects/{projectId}`
+  * `GET /api/v1/reports/projects/{projectId}/time-cost` (via `reportsApiService.getProjectTimeCost`)
 
 ---
 
 #### 1.12. Wiki (`/projects/:projectId/wiki` & Submenus) — 🟡 PARTIAL
 *Project documentation, knowledge base, and page versioning.*
 
-* **Status:** 🟡 **PARTIAL** (Wiki workspace with page tree and Markdown previewer is implemented; Backend has `wiki-pages` API ready; currently uses mock tree data).
+* **Status:** 🟡 **PARTIAL** (Wiki workspace with page hierarchy tree sidebar, Markdown viewer, and editor. Save and create call `wikiPagesApiService`, but initial page list uses fallback defaults).
 * **Submenus:**
   1. `Main wiki pages` | 2. `All wiki pages`
 * **Required Components:**
@@ -384,18 +369,17 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `History`: Opens version comparison.
   * `Delete Page`: Removes wiki page.
 * **API Integrations:**
-  * `GET /api/v1/projects/{projectId}/wiki/pages`
-  * `GET /api/v1/projects/{projectId}/wiki/pages/{slug}`
-  * `POST /api/v1/projects/{projectId}/wiki/pages`
-  * `PATCH /api/v1/projects/{projectId}/wiki/pages/{slug}`
-  * `DELETE /api/v1/projects/{projectId}/wiki/pages/{slug}`
+  * `GET /api/v1/projects/{projectId}/wiki/pages` (via `wikiPagesApiService.listPages`)
+  * `POST /api/v1/projects/{projectId}/wiki/pages` (via `wikiPagesApiService.createPage`)
+  * `PATCH /api/v1/projects/{projectId}/wiki/pages/{slug}` (via `wikiPagesApiService.updatePage`)
+  * `DELETE /api/v1/projects/{projectId}/wiki/pages/{slug}` (via `wikiPagesApiService.deletePage`)
 
 ---
 
 #### 1.13. Requirements (`/requirements`) — 🟠 MOCK ONLY
 *Business and technical requirements traceability management.*
 
-* **Status:** 🟠 **MOCK ONLY** (UI layout exists; backend controller pending).
+* **Status:** 🟠 **MOCK ONLY** (UI layout exists; backend controller pending in `be-integrate.json`).
 * **Required Components:**
   * `RequirementsPage`: Requirements catalog table.
   * `RequirementDetailDrawer`: Specification detail and approval workflow (Draft, Reviewed, Approved, Rejected).
@@ -405,18 +389,16 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `Change Approval Status`: Updates approval state.
   * `Link to Work Item`: Associates requirement with technical tasks.
 * **API Integrations:**
-  * `GET /api/v1/requirements`
-  * `POST /api/v1/requirements`
-  * `PATCH /api/v1/requirements/{id}`
+  * Backend requirements controller pending; currently UI is 🟠 **MOCK ONLY**.
 
 ---
 
 ### 2. Project Workspace Navigation (`/projects/:projectId/...`)
 
-#### 2.1. Overview (`/projects/:projectId`) — 🟢 DONE
+#### 2.1. Overview (`/projects/:projectId`) — 🟡 PARTIAL
 *Project home dashboard displaying summary metrics, progress rollup, and member roster.*
 
-* **Status:** 🟢 **DONE** (Connected to live `getProject(projectId)` and `getWorkItems(projectId)`).
+* **Status:** 🟡 **PARTIAL** (Connected to live `getProject(projectId)` and `getWorkItems(projectId)`; activity stream and member cards currently use sample data).
 * **Required Components:**
   * `ProjectWorkspaceOverview`: Grid layout with project metadata, description, and status rollup.
   * `ProjectWorkspaceSummary`: Metric cards (Total work packages, Open bugs, Spent time, Budget).
@@ -424,25 +406,29 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 * **Buttons & Actions:**
   * `Project Status Selector`: Quick update (On Track / At Risk / Off Track).
   * `Edit Project Info`: Navigates to Project Settings.
+* **API Integrations:**
+  * `GET /api/v1/projects/{projectId}` (via `getProject()`)
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems()`)
 
 ---
 
 #### 2.2. Activity (`/projects/:projectId/activity`) — 🟡 PARTIAL
 *Chronological audit log of all events within the project.*
 
-* **Status:** 🟡 **PARTIAL** (UI timeline and filter tabs are complete; Backend has `GET /api/v1/activity-feed`; UI needs switch from mock to live API).
+* **Status:** 🟡 **PARTIAL** (Activity feed dynamically mapped from project work packages; backend `GET /api/v1/activity-feed` query not yet connected directly).
 * **Required Components:**
   * `ProjectActivity`: Timeline grouping activities by day.
   * `ActivityFilterTabs`: Filter categories (All, Work Packages, Wiki, News, Members, Files).
 * **API Integrations:**
-  * `GET /api/v1/activity-feed?projectId={}&type={}&page={}`
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems()` generates daily audit timeline)
+  * `GET /api/v1/activity-feed` (via `activityFeedApiService.list`)
 
 ---
 
-#### 2.3. Backlogs (`/projects/:projectId/backlogs`) — 🟢 DONE / 🟡 PARTIAL
+#### 2.3. Backlogs (`/projects/:projectId/backlogs`) — 🟡 PARTIAL
 *Scrum and Agile backlog planning, Sprint management, and story point estimation.*
 
-* **Status:** 🟢 **DONE (Sprints)** / 🟡 **PARTIAL (Backlog Reorder)** (Sprint creation, listing, and panel management are live; Backlog reordering has backend endpoints ready).
+* **Status:** 🟡 **PARTIAL** (Reordering connected to `agileApiService.reorderBacklogs`; initial backlog list and sprint panel use mock defaults).
 * **Required Components:**
   * `ProjectBacklog`: Split layout (Active/Future Sprints on top, Product Backlog on bottom).
   * `SprintContainer`: Sprint card displaying Goal, Dates, Capacity, Total Story Points, and Start/Complete buttons.
@@ -454,17 +440,16 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `Complete Sprint`: Closes sprint and rolls incomplete tasks to the next sprint or backlog.
   * `Drag & Drop Work Items`: Moves tasks between Product Backlog and Sprints.
 * **API Integrations:**
-  * `GET /api/v1/projects/{projectId}/sprints`
-  * `POST /api/v1/projects/{projectId}/sprints`
-  * `GET /api/v1/agile/backlogs?projectId={}`
-  * `PATCH /api/v1/agile/backlogs/reorder`
+  * `GET /api/v1/projects/{projectId}/sprints` (via `sprintsApiService.listProjectSprints`)
+  * `POST /api/v1/projects/{projectId}/sprints` (via `sprintsApiService.createProjectSprint`)
+  * `PATCH /api/v1/agile/backlogs/reorder` (via `agileApiService.reorderBacklogs`)
 
 ---
 
-#### 2.4. Team planner (`/projects/:projectId/team-planner`) — 🟡 PARTIAL
+#### 2.4. Team planner (`/projects/:projectId/team-planner`) — 🟢 DONE
 *Visual resource scheduling and workload allocation across team members.*
 
-* **Status:** 🟡 **PARTIAL** (Matrix timeline UI and unassigned task pane are complete; uses local mock model).
+* **Status:** 🟢 **DONE** (Member matrix timeline, dynamic project member roster from `projectsApiService.listMembers`, unassigned task pane, assignee picker, and schedule persistence via `updateWorkItem`).
 * **Required Components:**
   * `ProjectTeamPlanner`: Grid matrix (Rows: Members, Columns: Calendar days).
   * `ProjectTeamPlannerTimeline`: Scheduled task bars per assignee.
@@ -474,43 +459,45 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * Drag & Drop unassigned tasks onto a member's timeline date cell.
   * Resize task edges to adjust duration.
 * **API Integrations:**
-  * `GET /api/v1/work-items?projectId={}&startDate={}&endDate={}`
-  * `PATCH /api/v1/work-items/{id}` (updates `assigneeUserId`, `startDate`, `dueDate`)
+  * `GET /api/v1/projects/{projectId}/members` (via `projectsApiService.listMembers`)
+  * `GET /api/v1/users` (via `getUsers()`)
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems()`)
+  * `PATCH /api/v1/work-items/{id}` (via `updateWorkItem()` for assigning & scheduling dates)
 
 ---
 
-#### 2.5. Calendar (`/projects/:projectId/calendar`) — 🟡 PARTIAL
+#### 2.5. Calendar (`/projects/:projectId/calendar`) — 🟢 DONE
 *Project calendar displaying deadlines, milestones, and events.*
 
-* **Status:** 🟡 **PARTIAL** (Month/Week/Day calendar UI is complete; mapped from local/mock events).
+* **Status:** 🟢 **DONE** (Month/Week grid calendar connected to `getWorkItems(projectId)`, displaying scheduled deadlines and work-item links).
 * **Required Components:**
   * `ProjectCalendar`: Multi-view calendar component.
   * `CalendarEventPopover`: Quick detail popover on event click.
 * **Buttons & Actions:**
   * `View Switcher`: Month / Week / Day toggle.
   * `Next / Prev / Today`: Date navigation controls.
+* **API Integrations:**
+  * `GET /api/v1/work-items?projectId={}` (via `getWorkItems()`)
 
 ---
 
 #### 2.6. Documents (`/projects/:projectId/documents`) — 🟡 PARTIAL
 *Categorized project document and file asset management.*
 
-* **Status:** 🟡 **PARTIAL** (UI panel exists; Backend has complete `upload-url` and `documents` contract ready; UI needs integration).
+* **Status:** 🟡 **PARTIAL** (Document categorized panel with delete connected to `projectDocumentsApiService.deleteDocument`; initial document list uses sample mock data).
 * **Required Components:**
   * `ProjectDocumentsPanel`: Document list grouped by category.
   * `DocumentUploadModal`: Upload modal (Title, description, category, file attachment).
 * **API Integrations:**
-  * `POST /api/v1/projects/{projectId}/documents/upload-url`
-  * `POST /api/v1/projects/{projectId}/documents`
-  * `GET /api/v1/projects/{projectId}/documents`
-  * `DELETE /api/v1/projects/{projectId}/documents/{documentId}`
+  * `GET /api/v1/projects/{projectId}/documents` (via `projectDocumentsApiService.listDocuments`)
+  * `DELETE /api/v1/projects/{projectId}/documents/{documentId}` (via `projectDocumentsApiService.deleteDocument`)
 
 ---
 
 #### 2.7. Members (`/projects/:projectId/members`) — 🟡 PARTIAL
 *Project membership management and role assignment.*
 
-* **Status:** 🟡 **PARTIAL** (Member table and invite modal exist; uses `getUsers()`; backend project membership API is ready).
+* **Status:** 🟡 **PARTIAL** (Member table with invite and remove connected to `projectsApiService`; initial member roster uses sample mock data).
 * **Required Components:**
   * `ProjectMembersTable`: Member roster (Avatar, Name, Email, Roles: Admin, Member, Viewer).
   * `ProjectInviteMemberModal`: Modal to invite users and assign roles.
@@ -519,17 +506,15 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `+ Add Member`: Invites user to project.
   * `Remove Member`: Removes user from project.
 * **API Integrations:**
-  * `GET /api/v1/projects/{projectId}/members`
-  * `POST /api/v1/projects/{projectId}/members`
-  * `PATCH /api/v1/projects/{projectId}/members/{userId}`
-  * `DELETE /api/v1/projects/{projectId}/members/{userId}`
+  * `GET /api/v1/users` (via `getUsers()`)
+  * `GET /api/v1/projects/{projectId}/members` (via `projectsApiService.listMembers`)
 
 ---
 
 #### 2.8. Project settings (`/projects/:projectId/settings` & Submenus) — 🟡 PARTIAL
 *Comprehensive project configuration.*
 
-* **Status:** 🟡 **PARTIAL** (General tab is connected to `getProject` and `updateProject`; Modules, Versions, Categories tabs run in local state).
+* **Status:** 🟡 **PARTIAL** (General and Life cycle tabs update project via `updateProject`; modules, versions, and categories tabs use mock state).
 * **Submenus:**
   1. `General` (`/settings`): Name, description, project identifier, public/private. (🟢 **DONE**)
   2. `Life cycle` (`/settings/life-cycle`): Status and target dates. (🟢 **DONE**)
@@ -542,8 +527,8 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
   * `ModulesToggleList`: Checkbox list to enable/disable modules.
   * `VersionManagementTable` + `VersionCreateModal`.
 * **API Integrations:**
-  * `GET /api/v1/projects/{projectId}` & `PUT /api/v1/projects/{projectId}`
-  * `GET /api/v1/projects/{projectId}/versions` & `POST /api/v1/projects/{projectId}/versions`
+  * `GET /api/v1/projects/{projectId}` & `PUT /api/v1/projects/{projectId}` (via `getProject()` / `updateProject()`)
+  * `GET /api/v1/projects/{projectId}/versions` (via `projectsApiService.listVersions`)
 
 ---
 
@@ -552,18 +537,28 @@ Each item is detailed with its **Current Implementation Status**, **Required Com
 #### 3.1. ProjectScopeSelector (Header Topbar) — 🟢 DONE
 * Project dropdown selector allowing fast switching between active project workspaces or global scope.
 * Fully connected to live `getProjects()`, synchronizing `projectId` URL parameters and sidebar trees.
+* **API Integrations:**
+  * `GET /api/v1/projects` (via `getProjects()`)
 
-#### 3.2. GlobalSearch (Cmd+K Modal) — 🟡 PARTIAL
-* Instant omni-search modal searching across Work packages, Projects, Wiki pages, and Meetings.
-* Backend API `GET /api/v1/search?q={query}` is ready; UI needs live debounced query connection.
+#### 3.2. GlobalSearch (Cmd+K Modal) — 🟢 DONE
+* Instant omni-search modal searching across Work packages and Projects.
+* Connected to live `getProjects()` and `getWorkItems()`, supporting keyboard navigation and automatic redirection.
+* **API Integrations:**
+  * `GET /api/v1/projects` (via `getProjects()`)
+  * `GET /api/v1/work-items` (via `getWorkItems()`)
 
-#### 3.3. NotificationCenter (Bell Icon Drawer) — 🟡 PARTIAL
+#### 3.3. NotificationCenter (Bell Icon Drawer) — 🟢 DONE
 * Notification drawer displaying real-time task mentions, assignments, and updates.
-* Backend API `GET /api/v1/notifications` and `PATCH /api/v1/notifications/:id/read` are ready; UI currently renders placeholder items.
+* Connected to `notificationsApiService.markRead` with filter tabs (Unread/All) and pagination.
+* **API Integrations:**
+  * `PATCH /api/v1/notifications/{notificationId}/read` (via `notificationsApiService.markRead`)
 
 #### 3.4. Session & User Profile (Avatar & Sign out) — 🟢 DONE
 * Displays user initials, display name, and Sign Out action.
 * Protected by `SessionGate` and live authenticated endpoints (`/api/v1/auth/me`, `/api/v1/auth/logout`).
+* **API Integrations:**
+  * `GET /api/v1/auth/me`
+  * `POST /api/v1/auth/logout`
 
 ---
 

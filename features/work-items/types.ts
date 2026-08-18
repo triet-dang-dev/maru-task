@@ -18,12 +18,15 @@ export interface UserItem {
 export interface WorkItemListItem {
   assignee?: string;
   assigneeUserId?: string | null;
+  dueDate?: string | null;
   id: string;
   priority?: string;
-  subject: string;
-  status: string;
   projectId: string;
   projectName?: string;
+  startDate?: string | null;
+  status: string;
+  subject: string;
+  type?: string;
   updatedAt: string;
 }
 
