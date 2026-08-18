@@ -9,8 +9,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { useToast } from "@/components/ui/Toast";
 import { projectsApiService } from "@/services/api/backend-services/projects";
 
 import { ProjectTeamPlannerAddPane } from "./ProjectTeamPlannerAddPane";
@@ -50,6 +50,7 @@ export function ProjectTeamPlanner({
   projectId,
   unscheduledWorkPackages = defaultUnscheduledWorkPackages,
 }: ProjectTeamPlannerProps) {
+  const { error: toastError } = useToast();
   const [anchorDate, setAnchorDate] = useState(() => new Date(Date.UTC(2026, 7, 17)));
   const [view, setView] = useState<TeamPlannerView>("workWeek");
   const [isAddPaneOpen, setIsAddPaneOpen] = useState(false);
@@ -73,7 +74,8 @@ export function ProjectTeamPlanner({
           "items" in res &&
           Array.isArray((res as { items: unknown[] }).items)
         ) {
-          const rawItems = (res as { items: Array<{ id?: string; name: string; userId?: string }> }).items;
+          const rawItems = (res as { items: Array<{ id?: string; name: string; userId?: string }> })
+            .items;
           const mapped: TeamPlannerAssignee[] = rawItems.map((member) => ({
             id: member.id || String(member.userId ?? ""),
             initials: member.name
@@ -94,6 +96,10 @@ export function ProjectTeamPlanner({
       isMounted = false;
     };
   }, [projectId]);
+
+  useEffect(() => {
+    if (errorMessage) toastError(errorMessage);
+  }, [errorMessage, toastError]);
 
   const activeBaseAssignees =
     assignees !== defaultTeamPlannerAssignees ? assignees : (dynamicAssignees ?? assignees);
@@ -172,14 +178,6 @@ export function ProjectTeamPlanner({
         />
       </Stack>
 
-      {errorMessage ? (
-        <Box sx={{ mt: 3 }}>
-          <InlineAlert title="Unable to update team planner" tone="error">
-            {errorMessage}
-          </InlineAlert>
-        </Box>
-      ) : null}
-
       <Stack direction={{ xs: "column", md: "row" }} spacing={3} sx={{ mt: 3 }}>
         <Paper sx={{ flex: 1, minWidth: 0, overflow: "hidden" }} variant="outlined">
           {visibleAssignees.length === 0 ? (
@@ -218,10 +216,7 @@ export function ProjectTeamPlanner({
         </Paper>
 
         {isAddPaneOpen ? (
-          <ProjectTeamPlannerAddPane
-            projectId={projectId}
-            workPackages={unscheduledWorkPackages}
-          />
+          <ProjectTeamPlannerAddPane projectId={projectId} workPackages={unscheduledWorkPackages} />
         ) : null}
       </Stack>
     </Box>

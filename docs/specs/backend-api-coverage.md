@@ -55,13 +55,13 @@ Passthrough contracts preserve the backend status, content type, and response bo
 
 ## Authentication and OIDC
 
-- `auth.login` — `POST /auth/login/web-app` → `POST /api/auth/login/web-app`; anonymous; specialized; `live-ui`.
-- `auth.register` — `POST /auth/register` → `POST /api/auth/register`; `CanWriteSystem`; specialized; `adapter-only`. Add only inside a future Admin user-management UI.
-- `auth.refresh` — `POST /auth/refresh` → `POST /api/auth/refresh`; anonymous cookie rotation; specialized; `adapter-only` by design.
-- `auth.logout` — `POST /auth/logout` → `POST /api/auth/logout`; `CanRead`; specialized; `live-ui`.
-- `auth.me` — `GET /auth/me` → `GET /api/auth/me`; `CanRead`; specialized; `live-ui`, but BE currently returns only `data: true`.
-- `auth.oidc.start` — `GET /auth/oidc/{provider}/start` → `GET /api/auth/oidc/{provider}/start`; anonymous; specialized; `live-ui`.
-- `auth.oidc.callback` — `GET /auth/oidc/{provider}/callback` → `GET /api/auth/oidc/{provider}/callback`; anonymous; specialized; `live-ui`.
+- `auth.login` — `POST /auth/login/web-app` → `POST /api/v1/auth/login/web-app`; anonymous; specialized; `live-ui`.
+- `auth.register` — `POST /auth/register` → `POST /api/v1/auth/register`; `CanWriteSystem`; specialized; `adapter-only`. Add only inside a future Admin user-management UI.
+- `auth.refresh` — `POST /auth/refresh` → `POST /api/v1/auth/refresh`; anonymous cookie rotation; specialized; `adapter-only` by design.
+- `auth.logout` — `POST /auth/logout` → `POST /api/v1/auth/logout`; `CanRead`; specialized; `live-ui`.
+- `auth.me` — `GET /auth/me` → `GET /api/v1/auth/me`; `CanRead`; specialized; `live-ui`, but BE currently returns only `data: true`.
+- `auth.oidc.start` — `GET /auth/oidc/{provider}/start` → `GET /api/v1/auth/oidc/{provider}/start`; anonymous; specialized; `live-ui`.
+- `auth.oidc.callback` — `GET /auth/oidc/{provider}/callback` → `GET /api/v1/auth/oidc/{provider}/callback`; anonymous; specialized; `live-ui`.
 
 See `auth-session-integration.md` for cookie, Entra, and refresh constraints.
 

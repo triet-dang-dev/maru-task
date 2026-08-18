@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
@@ -52,16 +52,15 @@ describe("ProjectBoard", () => {
     expect(screen.getByText("No work packages on this board")).toBeInTheDocument();
   });
 
-  it("saves board configuration locally", async () => {
-    const user = userEvent.setup();
-
+  it("saves board configuration locally", () => {
     render(<ProjectBoard projectId="proj-1" />);
 
-    await user.click(screen.getByRole("button", { name: "Configure board" }));
+    fireEvent.click(screen.getByRole("button", { name: "Configure board" }));
     expect(screen.getByRole("dialog", { name: "Configure board" })).toBeInTheDocument();
-    await user.clear(screen.getByLabelText("Board name"));
-    await user.type(screen.getByLabelText("Board name"), "Delivery planning");
-    await user.click(screen.getByRole("button", { name: "Apply" }));
+    fireEvent.change(screen.getByLabelText("Board name"), {
+      target: { value: "Delivery planning" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Apply" }));
     expect(screen.getByText("Delivery planning", { selector: "h1" })).toBeInTheDocument();
   });
 

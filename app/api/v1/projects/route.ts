@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getMockProjects } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 const querySchema = z
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const upstreamUrl = new URL(`${env.DOTNET_API_BASE_URL}/projects`);
+  const upstreamUrl = new URL(backendUrl(env.DOTNET_API_BASE_URL, "/projects"));
   upstreamUrl.searchParams.set("Take", String(query.data.take));
   if (query.data.lastProjectId)
     upstreamUrl.searchParams.set("LastProjectId", String(query.data.lastProjectId));

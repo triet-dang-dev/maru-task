@@ -34,7 +34,7 @@ describe("allowlisted backend passthrough", () => {
     expect(await response.json()).toEqual({ success: true, data: { items: [] } });
     const [upstreamUrl, requestInit] = fetchMock.mock.calls[0];
     expect(upstreamUrl.toString()).toBe(
-      "http://localhost:5000/activity-feed?take=10&scope=project",
+      "http://localhost:5000/api/v1/activity-feed?take=10&scope=project",
     );
     const headers = new Headers(requestInit?.headers);
     expect(headers.get("cookie")).toBe("jwt_token=access");
@@ -62,7 +62,7 @@ describe("allowlisted backend passthrough", () => {
 
     expect(response.status).toBe(200);
     const [upstreamUrl, requestInit] = fetchMock.mock.calls[0];
-    expect(upstreamUrl.toString()).toBe("http://localhost:5000/agile/boards/move");
+    expect(upstreamUrl.toString()).toBe("http://localhost:5000/api/v1/agile/boards/move");
     expect(requestInit?.method).toBe("PATCH");
     expect(requestInit?.body).toBe(body);
     expect(new Headers(requestInit?.headers).get("content-type")).toBe("application/json");
@@ -87,7 +87,7 @@ describe("allowlisted backend passthrough", () => {
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({ errorCode: "Forbidden", success: false });
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
-      "http://localhost:5000/work-packages/101/labels/9",
+      "http://localhost:5000/api/v1/work-packages/101/labels/9",
     );
   });
 

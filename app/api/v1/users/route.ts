@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getMockUsers } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 const querySchema = z.object({
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const upstreamUrl = new URL(`${env.DOTNET_API_BASE_URL}/users`);
+  const upstreamUrl = new URL(backendUrl(env.DOTNET_API_BASE_URL, "/users"));
   upstreamUrl.searchParams.set("page", String(query.data.page));
   upstreamUrl.searchParams.set("pageSize", String(query.data.pageSize));
   if (query.data.search) upstreamUrl.searchParams.set("search", query.data.search);

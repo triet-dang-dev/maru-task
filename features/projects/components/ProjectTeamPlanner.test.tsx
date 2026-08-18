@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
+import { ToastProvider } from "@/components/ui/Toast";
 import { ProjectTeamPlanner } from "./ProjectTeamPlanner";
 
 describe("ProjectTeamPlanner", () => {
@@ -56,16 +57,26 @@ describe("ProjectTeamPlanner", () => {
     expect(screen.getByRole("heading", { level: 2 })).not.toHaveTextContent(initialRange ?? "");
   });
 
-  it("supports loading, error, and empty planner states", () => {
-    const { rerender } = render(<ProjectTeamPlanner isLoading projectId="42" />);
+  it("supports loading, toast error, and empty planner states", async () => {
+    const { rerender } = render(
+      <ToastProvider>
+        <ProjectTeamPlanner isLoading projectId="42" />
+      </ToastProvider>,
+    );
     expect(screen.getByRole("status", { name: "Loading team planner" })).toBeInTheDocument();
 
     rerender(
-      <ProjectTeamPlanner errorMessage="Team planner could not be loaded." projectId="42" />,
+      <ToastProvider>
+        <ProjectTeamPlanner errorMessage="Team planner could not be loaded." projectId="42" />
+      </ToastProvider>,
     );
-    expect(screen.getByRole("alert")).toHaveTextContent("Team planner could not be loaded.");
+    expect(await screen.findByText("Team planner could not be loaded.")).toBeInTheDocument();
 
-    rerender(<ProjectTeamPlanner assignees={[]} projectId="42" />);
+    rerender(
+      <ToastProvider>
+        <ProjectTeamPlanner assignees={[]} projectId="42" />
+      </ToastProvider>,
+    );
     expect(screen.getByText("Add assignees to set up your team planner.")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Add assignee" })).toBeInTheDocument();
   });

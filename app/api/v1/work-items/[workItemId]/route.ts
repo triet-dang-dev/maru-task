@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { deleteMockWorkItem, getMockWorkItem, updateMockWorkItem } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 type RouteContext = { params: Promise<{ workItemId: string }> };
@@ -119,11 +119,14 @@ export async function GET(request: Request, context: RouteContext) {
 
   let response: Response;
   try {
-    response = await fetch(new URL(`${env.DOTNET_API_BASE_URL}/work-packages/${workItemId.data}`), {
-      headers: createBackendHeaders(request, requestId),
-      method: "GET",
-      next: { revalidate: 0 },
-    });
+    response = await fetch(
+      new URL(backendUrl(env.DOTNET_API_BASE_URL, `/work-packages/${workItemId.data}`)),
+      {
+        headers: createBackendHeaders(request, requestId),
+        method: "GET",
+        next: { revalidate: 0 },
+      },
+    );
   } catch {
     return errorResponse(502, requestId);
   }
@@ -168,12 +171,15 @@ async function updateWorkItem(request: Request, context: RouteContext, method: "
 
   let response: Response;
   try {
-    response = await fetch(new URL(`${env.DOTNET_API_BASE_URL}/work-packages/${workItemId.data}`), {
-      body: JSON.stringify(input.data),
-      headers: createBackendHeaders(request, requestId, { contentType: "application/json" }),
-      method,
-      next: { revalidate: 0 },
-    });
+    response = await fetch(
+      new URL(backendUrl(env.DOTNET_API_BASE_URL, `/work-packages/${workItemId.data}`)),
+      {
+        body: JSON.stringify(input.data),
+        headers: createBackendHeaders(request, requestId, { contentType: "application/json" }),
+        method,
+        next: { revalidate: 0 },
+      },
+    );
   } catch {
     return errorResponse(502, requestId);
   }
@@ -205,11 +211,14 @@ export async function DELETE(request: Request, context: RouteContext) {
 
   let response: Response;
   try {
-    response = await fetch(new URL(`${env.DOTNET_API_BASE_URL}/work-packages/${workItemId.data}`), {
-      headers: createBackendHeaders(request, requestId),
-      method: "DELETE",
-      next: { revalidate: 0 },
-    });
+    response = await fetch(
+      new URL(backendUrl(env.DOTNET_API_BASE_URL, `/work-packages/${workItemId.data}`)),
+      {
+        headers: createBackendHeaders(request, requestId),
+        method: "DELETE",
+        next: { revalidate: 0 },
+      },
+    );
   } catch {
     return errorResponse(502, requestId);
   }

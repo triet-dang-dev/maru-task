@@ -3,11 +3,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
 import { InputField } from "@/components/ui/InputField";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
 import { SectionCard, SectionCardContent } from "@/components/ui/SectionCard";
+import { useToast } from "@/components/ui/Toast";
 
 import { createSprint, getSprints } from "../service";
 import type { SprintsResponse } from "../types";
@@ -24,6 +25,7 @@ function toUtcIsoString(value: string) {
 }
 
 export function ProjectSprintsPageContent({ projectId }: { projectId: string }) {
+  const { error: toastError } = useToast();
   const [data, setData] = useState<SprintsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,6 +62,14 @@ export function ProjectSprintsPageContent({ projectId }: { projectId: string }) 
     };
   }, [load]);
 
+  useEffect(() => {
+    if (error) toastError(error);
+  }, [error, toastError]);
+
+  useEffect(() => {
+    if (createError) toastError(createError);
+  }, [createError, toastError]);
+
   const handleCreate = useCallback(
     async ({ endDate, name, startDate }: CreateSprintFormValues) => {
       setCreateError(null);
@@ -87,9 +97,10 @@ export function ProjectSprintsPageContent({ projectId }: { projectId: string }) 
   if (isLoading) return <LoadingState label="Loading sprints" />;
   if (error) {
     return (
-      <InlineAlert title="Unable to load sprints" tone="error">
-        {error}
-      </InlineAlert>
+      <EmptyState
+        description="Sprints could not be loaded. Please try again later."
+        title="Sprints are unavailable"
+      />
     );
   }
   if (!data) return null;
@@ -139,13 +150,6 @@ export function ProjectSprintsPageContent({ projectId }: { projectId: string }) 
             {isCreating ? "Creating..." : "Create sprint"}
           </Button>
         </form>
-        {createError ? (
-          <div style={{ marginBottom: 16 }}>
-            <InlineAlert title="Unable to create sprint" tone="error">
-              {createError}
-            </InlineAlert>
-          </div>
-        ) : null}
         <ProjectSprintsPanel data={data} />
       </SectionCardContent>
     </SectionCard>

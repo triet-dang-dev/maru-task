@@ -7,8 +7,8 @@ import type { ColumnDef } from "@tanstack/react-table";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { DataTable } from "@/components/ui/DataTable";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { useToast } from "@/components/ui/Toast";
 
 import { getProjects } from "../service";
 import type { ProjectListItem, ProjectsResponse } from "../types";
@@ -43,6 +43,7 @@ const columns: Array<ColumnDef<ProjectListItem>> = [
 
 export function ProjectsPageContent() {
   const searchParams = useSearchParams();
+  const { error: toastError } = useToast();
   const [data, setData] = useState<ProjectsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,6 +69,10 @@ export function ProjectsPageContent() {
     })();
   }, [load]);
 
+  useEffect(() => {
+    if (error) toastError(error);
+  }, [error, toastError]);
+
   const items = data?.items;
   const filteredItems = useMemo(() => {
     if (!items) return [];
@@ -84,23 +89,17 @@ export function ProjectsPageContent() {
 
   if (isLoading) return <LoadingState label="Loading projects" />;
 
-  if (error) {
-    return (
-      <InlineAlert title="Unable to load projects" tone="error">
-        {error}
-      </InlineAlert>
-    );
-  }
-
   if (!data || filteredItems.length === 0) {
     return (
       <EmptyState
         description={
-          statusFilter || viewFilter
-            ? `No projects found matching the selected filter.`
-            : "No projects are available for your current account."
+          error
+            ? "Projects could not be loaded. Please try again later."
+            : statusFilter || viewFilter
+              ? `No projects found matching the selected filter.`
+              : "No projects are available for your current account."
         }
-        title="No projects found"
+        title={error ? "Projects are unavailable" : "No projects found"}
       />
     );
   }

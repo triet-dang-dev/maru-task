@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createMockWorkItem, getMockWorkItems } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 const errorDetails = {
@@ -133,7 +133,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const upstreamUrl = new URL(`${env.DOTNET_API_BASE_URL}/work-packages`);
+  const upstreamUrl = new URL(backendUrl(env.DOTNET_API_BASE_URL, "/work-packages"));
   upstreamUrl.searchParams.set("Take", String(query.data.take));
   if (query.data.lastWorkPackageId)
     upstreamUrl.searchParams.set("LastWorkPackageId", String(query.data.lastWorkPackageId));
@@ -213,7 +213,7 @@ export async function POST(request: Request) {
     });
   }
 
-  const upstreamUrl = new URL(`${env.DOTNET_API_BASE_URL}/work-packages`);
+  const upstreamUrl = new URL(backendUrl(env.DOTNET_API_BASE_URL, "/work-packages"));
 
   let response: Response;
 

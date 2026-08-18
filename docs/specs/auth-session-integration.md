@@ -4,15 +4,15 @@ This document records the authentication contract implemented in `maru-task-be` 
 
 ## Contract matrix
 
-| .NET behavior                                                                            | Frontend mapping                                                                                          | State                             |
-| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------- |
-| `POST /auth/login/web-app` with `{ email, password }`                                    | `POST /api/auth/login/web-app`; validates the input, forwards it, and relays HTTP-only cookies            | Mapped                            |
-| `POST /auth/register` with `{ email, displayName, role }`, protected by `CanWriteSystem` | `POST /api/auth/register` plus `registerUser()` service; no public registration page is exposed           | Mapped adapter                    |
-| `POST /auth/refresh`, with access and refresh tokens read only from cookies              | `POST /api/auth/refresh`; browser clients perform one shared refresh after parallel `401`s and retry once | Mapped                            |
-| `POST /auth/logout`, protected by `CanRead`, with no body                                | `POST /api/auth/logout`; an expired access token is refreshed before one logout retry                     | Mapped                            |
-| `GET /auth/me`, protected by `CanRead`                                                   | `GET /api/auth/me`; current `{ success: true, data: true }` is represented by a neutral shell identity    | Mapped to current limited payload |
-| `GET /auth/oidc/entra/start`                                                             | `GET /api/auth/oidc/entra/start`; redirect is relayed without server-side following                       | Mapped                            |
-| `GET /auth/oidc/entra/callback`                                                          | `GET /api/auth/oidc/entra/callback`; query, cookies, and post-login redirect are relayed                  | Mapped                            |
+| .NET behavior                                                                            | Frontend mapping                                                                                             | State                             |
+| ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | --------------------------------- |
+| `POST /auth/login/web-app` with `{ email, password }`                                    | `POST /api/v1/auth/login/web-app`; validates the input, forwards it, and relays HTTP-only cookies            | Mapped                            |
+| `POST /auth/register` with `{ email, displayName, role }`, protected by `CanWriteSystem` | `POST /api/v1/auth/register` plus `registerUser()` service; no public registration page is exposed           | Mapped adapter                    |
+| `POST /auth/refresh`, with access and refresh tokens read only from cookies              | `POST /api/v1/auth/refresh`; browser clients perform one shared refresh after parallel `401`s and retry once | Mapped                            |
+| `POST /auth/logout`, protected by `CanRead`, with no body                                | `POST /api/v1/auth/logout`; an expired access token is refreshed before one logout retry                     | Mapped                            |
+| `GET /auth/me`, protected by `CanRead`                                                   | `GET /api/v1/auth/me`; current `{ success: true, data: true }` is represented by a neutral shell identity    | Mapped to current limited payload |
+| `GET /auth/oidc/entra/start`                                                             | `GET /api/v1/auth/oidc/entra/start`; redirect is relayed without server-side following                       | Mapped                            |
+| `GET /auth/oidc/entra/callback`                                                          | `GET /api/v1/auth/oidc/entra/callback`; query, cookies, and post-login redirect are relayed                  | Mapped                            |
 
 ## Cookie boundary
 
@@ -20,11 +20,11 @@ The browser talks only to the same-origin Next.js BFF. The BFF sends `Cookie` an
 
 The current backend emits:
 
-| Flow                    | Cookies                      | Backend path | Frontend handling                                                                   |
-| ----------------------- | ---------------------------- | ------------ | ----------------------------------------------------------------------------------- |
-| Email login and refresh | `jwt_token`, `refresh_token` | `/auth`      | Rewritten to `/` because browser-facing routes live under `/api/auth` and `/api/v1` |
-| Entra callback          | `jwt_token`, `refresh_token` | `/`          | Preserved                                                                           |
-| Logout                  | Both cookies expired         | `/auth`      | Relayed and also expired at `/`                                                     |
+| Flow                    | Cookies                      | Backend path | Frontend handling                                                                      |
+| ----------------------- | ---------------------------- | ------------ | -------------------------------------------------------------------------------------- |
+| Email login and refresh | `jwt_token`, `refresh_token` | `/auth`      | Rewritten to `/` because browser-facing routes live under `/api/v1/auth` and `/api/v1` |
+| Entra callback          | `jwt_token`, `refresh_token` | `/`          | Preserved                                                                              |
+| Logout                  | Both cookies expired         | `/auth`      | Relayed and also expired at `/`                                                        |
 
 `HttpOnly` and `SameSite=Strict` are preserved. `Secure` is preserved in production and removed only for non-production HTTP localhost-style development, because secure cookies cannot be stored over HTTP. The backend currently sets access-cookie expiry to 61 minutes, refresh-cookie expiry to 7 days, and signs the JWT for 60 minutes.
 
@@ -33,7 +33,7 @@ No browser code stores or decodes either token. All implemented `/api/v1/**` BFF
 ## Refresh behavior
 
 1. A feature request receives `401`.
-2. The browser calls `POST /api/auth/refresh` without a body.
+2. The browser calls `POST /api/v1/auth/refresh` without a body.
 3. The BFF forwards both cookies to `.NET POST /auth/refresh`.
 4. .NET validates the expired access-token JTI and refresh-token hash, revokes the old pair, creates a new pair, and emits rotated cookies.
 5. The BFF rewrites the backend cookie path for its browser-facing boundary and relays the cookies.
@@ -56,7 +56,7 @@ The frontend never expects an access token in JSON. This matches `LoginResponse`
 
 Required deployment values outside this frontend repository:
 
-- Azure redirect URI and `.NET OIDC_ENTRA_REDIRECT_URI`: `https://<frontend-origin>/api/auth/oidc/entra/callback`
+- Azure redirect URI and `.NET OIDC_ENTRA_REDIRECT_URI`: `https://<frontend-origin>/api/v1/auth/oidc/entra/callback`
 - `.NET Oidc__PostLoginRedirectUrl`: `https://<frontend-origin>/home`
 - `.NET OIDC_ENTRA_ISSUER`, `OIDC_ENTRA_CLIENT_ID`, `OIDC_ENTRA_CLIENT_SECRET`
 - Optional `.NET OIDC_ENTRA_ALLOWED_EMAIL_DOMAINS` and `OIDC_ENTRA_ENABLE_JIT_PROVISIONING`

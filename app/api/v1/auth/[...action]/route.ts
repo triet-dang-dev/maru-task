@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getMockAuthData } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 type RouteContext = { params: Promise<{ action: string[] }> };
@@ -110,6 +110,7 @@ function toBrowserSession(payload: unknown) {
 
 function normalizeBrowserCookie(setCookie: string, request: Request) {
   let normalized = setCookie.replace(/;\s*Path=\/auth(?=;|$)/gi, "; Path=/");
+  normalized = normalized.replace(/;\s*SameSite=Strict(?=;|$)/gi, "; SameSite=Lax");
   const isLocalHttp =
     process.env.NODE_ENV !== "production" && new URL(request.url).protocol === "http:";
   if (isLocalHttp) normalized = normalized.replace(/;\s*Secure(?=;|$)/gi, "");
@@ -139,7 +140,7 @@ function appendBrowserSessionClears(headers: Headers, request: Request, accessCo
 async function proxyOidcRedirect(request: Request, actionPath: string, requestId: string) {
   const env = getServerEnv();
   const requestUrl = new URL(request.url);
-  const upstreamUrl = new URL(`${env.DOTNET_API_BASE_URL.replace(/\/$/, "")}/auth/${actionPath}`);
+  const upstreamUrl = new URL(backendUrl(env.DOTNET_API_BASE_URL, `/auth/${actionPath}`));
 
   if (actionPath.endsWith("/callback")) {
     requestUrl.searchParams.forEach((value, key) => upstreamUrl.searchParams.append(key, value));
@@ -177,6 +178,13 @@ async function proxyOidcRedirect(request: Request, actionPath: string, requestId
 
   if (redirectUrl.protocol !== "http:" && redirectUrl.protocol !== "https:") {
     return errorResponse(502, requestId, responseHeaders);
+  }
+
+  if (
+    actionPath === "oidc/entra/start" &&
+    request.headers.get("X-OIDC-Start-Mode") === "preflight"
+  ) {
+    return NextResponse.json({ redirectUrl: redirectUrl.toString() }, { headers: responseHeaders });
   }
 
   responseHeaders.set("Location", redirectUrl.toString());
@@ -246,16 +254,13 @@ async function proxy(request: Request, context: RouteContext, method: "GET" | "P
 
   let upstream: Response;
   try {
-    upstream = await fetch(
-      new URL(`${env.DOTNET_API_BASE_URL.replace(/\/$/, "")}/auth/${actionPath}`),
-      {
-        body,
-        headers,
-        method,
-        next: { revalidate: 0 },
-        signal: AbortSignal.timeout(env.DOTNET_API_TIMEOUT_MS),
-      },
-    );
+    upstream = await fetch(new URL(backendUrl(env.DOTNET_API_BASE_URL, `/auth/${actionPath}`)), {
+      body,
+      headers,
+      method,
+      next: { revalidate: 0 },
+      signal: AbortSignal.timeout(env.DOTNET_API_TIMEOUT_MS),
+    });
   } catch {
     return errorResponse(502, requestId);
   }

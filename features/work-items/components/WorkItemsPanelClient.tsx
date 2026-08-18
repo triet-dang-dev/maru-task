@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type KeyboardEvent, type PointerEvent } from "react";
+import { useEffect, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { useForm } from "react-hook-form";
 
 import Box from "@mui/material/Box";
@@ -15,7 +15,6 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
 import { DropdownMenu, DropdownMenuItem } from "@/components/ui/DropdownMenu";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { InputField } from "@/components/ui/InputField";
 import { SelectBox } from "@/components/ui/SelectBox";
 import {
@@ -25,7 +24,16 @@ import {
   SectionCardHeader,
   SectionCardTitle,
 } from "@/components/ui/SectionCard";
-import { ExternalLink, Filter, LayoutGrid, Plus, Settings2, Table as TableIcon, X } from "lucide-react";
+import { useToast } from "@/components/ui/Toast";
+import {
+  ExternalLink,
+  Filter,
+  LayoutGrid,
+  Plus,
+  Settings2,
+  Table as TableIcon,
+  X,
+} from "lucide-react";
 
 import { WorkItemCardView } from "./WorkItemCardView";
 import { WorkItemContextMenu } from "./WorkItemContextMenu";
@@ -117,6 +125,7 @@ function getColumns(
 }
 
 export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPanelClientProps) {
+  const { error: toastError } = useToast();
   const [selectedWorkItem, setSelectedWorkItem] = useState<WorkItemListItem | null>(null);
   const [statusFilter, setStatusFilter] = useState("");
   const [viewMode, setViewMode] = useState<"card" | "table">("table");
@@ -151,6 +160,10 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
       value: status,
     })),
   ];
+
+  useEffect(() => {
+    if (error) toastError(error);
+  }, [error, toastError]);
 
   const visibleItems = data.items.filter((item) => {
     if (statusFilter && item.status !== statusFilter) {
@@ -306,11 +319,13 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
               }
             >
               {columns
-                .filter((column): column is typeof column & { id: string } => Boolean(column.id) && column.id !== "actions")
+                .filter(
+                  (column): column is typeof column & { id: string } =>
+                    Boolean(column.id) && column.id !== "actions",
+                )
                 .map((column) => {
                   const isVisible = visibleColumnIds.includes(column.id);
-                  const headerLabel =
-                    typeof column.header === "string" ? column.header : column.id;
+                  const headerLabel = typeof column.header === "string" ? column.header : column.id;
                   return (
                     <DropdownMenuItem
                       aria-checked={isVisible}
@@ -395,8 +410,6 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
           </div>
         </div>
 
-        {error ? <InlineAlert tone="error">{error}</InlineAlert> : null}
-
         {visibleItems.length === 0 ? (
           <EmptyState
             description={
@@ -404,7 +417,11 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
                 ? "No work items found matching the selected filters. Try adjusting your filters."
                 : "Create a work item to begin tracking project tasks."
             }
-            title={statusFilter || advancedFilters.length > 0 ? "No matching work items" : "No work items yet"}
+            title={
+              statusFilter || advancedFilters.length > 0
+                ? "No matching work items"
+                : "No work items yet"
+            }
           />
         ) : (
           <div
@@ -438,7 +455,15 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
                     }}
                   >
                     {showInlineAdd ? (
-                      <Box sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "primary.main", borderRadius: 1, p: 2 }}>
+                      <Box
+                        sx={{
+                          bgcolor: "background.paper",
+                          border: "1px solid",
+                          borderColor: "primary.main",
+                          borderRadius: 1,
+                          p: 2,
+                        }}
+                      >
                         <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                           <InputField
                             autoFocus
@@ -467,7 +492,9 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
                             value={inlineStatus}
                           />
                         </Stack>
-                        {inlineError ? <p className="text-xs text-red-600 mt-1">{inlineError}</p> : null}
+                        {inlineError ? (
+                          <p className="text-xs text-red-600 mt-1">{inlineError}</p>
+                        ) : null}
                         <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
                           <Button
                             disabled={isCreating}
@@ -578,7 +605,9 @@ export function WorkItemsPanelClient({ data, onRefresh, projectId }: WorkItemsPa
                     </div>
                     <div>
                       <dt className="text-xs font-medium text-slate-500">Updated</dt>
-                      <dd className="text-slate-700">{formatUpdatedAt(selectedWorkItem.updatedAt)}</dd>
+                      <dd className="text-slate-700">
+                        {formatUpdatedAt(selectedWorkItem.updatedAt)}
+                      </dd>
                     </div>
                   </dl>
                 </div>

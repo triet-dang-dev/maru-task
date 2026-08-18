@@ -2,6 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
+import { ToastProvider } from "@/components/ui/Toast";
 import { MyPageDashboard } from "./MyPageDashboard";
 
 describe("MyPageDashboard", () => {
@@ -46,14 +47,26 @@ describe("MyPageDashboard", () => {
     expect(screen.queryByRole("region", { name: "My spent time" })).not.toBeInTheDocument();
   });
 
-  it("covers loading, error, and empty grid states", () => {
-    const { rerender } = render(<MyPageDashboard isLoading />);
+  it("covers loading, toast error, and empty grid states", async () => {
+    const { rerender } = render(
+      <ToastProvider>
+        <MyPageDashboard isLoading />
+      </ToastProvider>,
+    );
     expect(screen.getByRole("status", { name: "Loading my page" })).toBeInTheDocument();
 
-    rerender(<MyPageDashboard errorMessage="The personal grid is unavailable." />);
-    expect(screen.getByText("The personal grid is unavailable.")).toBeInTheDocument();
+    rerender(
+      <ToastProvider>
+        <MyPageDashboard errorMessage="The personal grid is unavailable." />
+      </ToastProvider>,
+    );
+    expect(await screen.findByText("The personal grid is unavailable.")).toBeInTheDocument();
 
-    rerender(<MyPageDashboard initialWidgets={[]} key="empty" />);
+    rerender(
+      <ToastProvider>
+        <MyPageDashboard initialWidgets={[]} key="empty" />
+      </ToastProvider>,
+    );
     expect(screen.getByText("Your page has no widgets yet")).toBeInTheDocument();
   });
 });

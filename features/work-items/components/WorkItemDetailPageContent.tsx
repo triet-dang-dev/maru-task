@@ -22,9 +22,9 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { AttributeHelpText } from "@/components/ui/AttributeHelpText";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { InputField } from "@/components/ui/InputField";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { useToast } from "@/components/ui/Toast";
 import { UserProfilePopover } from "@/components/ui/UserProfilePopover";
 import {
   SectionCard,
@@ -169,6 +169,7 @@ export function WorkItemDetailPageContent({
   workItemId,
 }: WorkItemDetailPageContentProps) {
   const router = useRouter();
+  const { error: toastError } = useToast();
   const [detail, setDetail] = useState<WorkItemDetail | null>(null);
   const [initialPriorityId, setInitialPriorityId] = useState("");
   const [priorities, setPriorities] = useState<PriorityItem[]>([]);
@@ -277,6 +278,10 @@ export function WorkItemDetailPageContent({
       isMounted = false;
     };
   }, [load]);
+
+  useEffect(() => {
+    if (error) toastError(error);
+  }, [error, toastError]);
 
   const save = async ({
     assigneeUserId,
@@ -401,9 +406,10 @@ export function WorkItemDetailPageContent({
   if (isLoading) return <LoadingState label="Loading work item" />;
   if (error && !detail) {
     return (
-      <InlineAlert title="Unable to load work item" tone="error">
-        {error}
-      </InlineAlert>
+      <EmptyState
+        description="This work item could not be loaded. Please try again later."
+        title="Work item is unavailable"
+      />
     );
   }
   if (!detail || detail.projectId !== projectId) {
@@ -419,11 +425,12 @@ export function WorkItemDetailPageContent({
     <SectionCard className="work-package--single-view" data-selector="wp-single-view">
       <SectionCardHeader
         action={
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ alignItems: { sm: "center" } }}>
-            <WorkItemTimerButton
-              workItemId={detail.id}
-              workItemSubject={detail.subject}
-            />
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ alignItems: { sm: "center" } }}
+          >
+            <WorkItemTimerButton workItemId={detail.id} workItemSubject={detail.subject} />
             <Button
               aria-label="Set reminder"
               onClick={() => setIsReminderOpen(true)}
@@ -470,7 +477,11 @@ export function WorkItemDetailPageContent({
       >
         <Box sx={{ width: "100%" }}>
           {/* OpenProject Breadcrumb */}
-          <Stack direction="row" spacing={1} sx={{ alignItems: "center", color: "text.secondary", fontSize: "0.8125rem", mb: 1 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: "center", color: "text.secondary", fontSize: "0.8125rem", mb: 1 }}
+          >
             <Link
               className="font-medium text-blue-700 underline-offset-4 hover:underline"
               href={`/projects/${projectId}/work-items`}
@@ -482,7 +493,11 @@ export function WorkItemDetailPageContent({
           </Stack>
 
           {/* OpenProject Header Title & Badges */}
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ alignItems: { sm: "center" }, mb: 1 }}>
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1.5}
+            sx={{ alignItems: { sm: "center" }, mb: 1 }}
+          >
             <Chip
               label={detail.type || "TASK"}
               size="small"
@@ -506,8 +521,8 @@ export function WorkItemDetailPageContent({
             sx={{ fontSize: "0.8125rem", mt: 0.5 }}
             variant="body2"
           >
-            #{detail.id}: Created by <strong>{detail.author || "Morgan Chen"}</strong>. Last updated on{" "}
-            <strong>{formatDetailDate(detail.updatedAt)}</strong>. Status:{" "}
+            #{detail.id}: Created by <strong>{detail.author || "Morgan Chen"}</strong>. Last updated
+            on <strong>{formatDetailDate(detail.updatedAt)}</strong>. Status:{" "}
             <strong>{detail.status || "Open"}</strong> | Priority:{" "}
             <strong>{detail.priority || "Normal"}</strong>
           </Typography>
@@ -553,14 +568,6 @@ export function WorkItemDetailPageContent({
           </div>
         </nav>
 
-        {error ? (
-          <div className="mb-4 mt-4">
-            <InlineAlert title="Unable to complete work-item action" tone="error">
-              {error}
-            </InlineAlert>
-          </div>
-        ) : null}
-
         <div
           aria-label={`${activeTab.slice(0, 1).toUpperCase()}${activeTab.slice(1)}`}
           className="grid gap-6 pt-6"
@@ -593,7 +600,13 @@ export function WorkItemDetailPageContent({
               <Divider />
 
               {/* OpenProject Attribute Groups */}
-              <Box sx={{ display: "grid", gap: 4, gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" } }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gap: 4,
+                  gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" },
+                }}
+              >
                 {/* People Group */}
                 <Box
                   className="attributes-group"
@@ -633,7 +646,14 @@ export function WorkItemDetailPageContent({
                       }}
                     >
                       <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", pt: 1 }}>
-                        <Avatar sx={{ bgcolor: "primary.main", height: 28, width: 28, fontSize: "0.75rem" }}>
+                        <Avatar
+                          sx={{
+                            bgcolor: "primary.main",
+                            height: 28,
+                            width: 28,
+                            fontSize: "0.75rem",
+                          }}
+                        >
                           {(detail.author || "M")[0]}
                         </Avatar>
                         <Box>

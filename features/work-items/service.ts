@@ -1,4 +1,5 @@
 import { getPublicEnv } from "@/utils/env";
+import { apiV1Path } from "@/utils/api-path";
 import { fetchWithSession } from "@/services/api/session-fetch";
 
 import type {
@@ -44,7 +45,7 @@ export async function getWorkItems(projectId: string): Promise<WorkItemsViewMode
 }
 
 export async function createWorkItem(input: { projectId: string; title: string }): Promise<void> {
-  const response = await fetchWithSession("/api/v1/work-items", {
+  const response = await fetchWithSession(apiV1Path("/work-items"), {
     body: JSON.stringify({ projectId: input.projectId, title: input.title }),
     headers: {
       Accept: "application/json",
@@ -68,10 +69,13 @@ export async function createWorkItem(input: { projectId: string; title: string }
 }
 
 export async function getWorkItem(workItemId: string): Promise<WorkItemDetail> {
-  const response = await fetchWithSession(`/api/v1/work-items/${encodeURIComponent(workItemId)}`, {
-    cache: "no-store",
-    headers: { Accept: "application/json" },
-  });
+  const response = await fetchWithSession(
+    apiV1Path(`/work-items/${encodeURIComponent(workItemId)}`),
+    {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    },
+  );
 
   if (!response.ok) {
     throw new Error(`Unable to fetch work item: ${response.status}`);
@@ -90,11 +94,14 @@ export async function updateWorkItem(
     subject?: string;
   },
 ): Promise<void> {
-  const response = await fetchWithSession(`/api/v1/work-items/${encodeURIComponent(workItemId)}`, {
-    body: JSON.stringify(input),
-    headers: { Accept: "application/json", "Content-Type": "application/json" },
-    method: "PATCH",
-  });
+  const response = await fetchWithSession(
+    apiV1Path(`/work-items/${encodeURIComponent(workItemId)}`),
+    {
+      body: JSON.stringify(input),
+      headers: { Accept: "application/json", "Content-Type": "application/json" },
+      method: "PATCH",
+    },
+  );
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
@@ -110,10 +117,13 @@ export async function updateWorkItem(
 }
 
 export async function deleteWorkItem(workItemId: string): Promise<void> {
-  const response = await fetchWithSession(`/api/v1/work-items/${encodeURIComponent(workItemId)}`, {
-    headers: { Accept: "application/json" },
-    method: "DELETE",
-  });
+  const response = await fetchWithSession(
+    apiV1Path(`/work-items/${encodeURIComponent(workItemId)}`),
+    {
+      headers: { Accept: "application/json" },
+      method: "DELETE",
+    },
+  );
 
   if (!response.ok) {
     const payload = await response.json().catch(() => null);
@@ -133,7 +143,7 @@ export async function createWorkItemComment(
   body: string,
 ): Promise<WorkItemComment> {
   const response = await fetchWithSession(
-    `/api/v1/work-items/${encodeURIComponent(workItemId)}/comments`,
+    apiV1Path(`/work-items/${encodeURIComponent(workItemId)}/comments`),
     {
       body: JSON.stringify({ body }),
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -161,7 +171,7 @@ export async function createWorkItemRelation(
   input: { relatedWorkItemId: string; relationType: string },
 ): Promise<WorkItemRelation> {
   const response = await fetchWithSession(
-    `/api/v1/work-items/${encodeURIComponent(workItemId)}/relations`,
+    apiV1Path(`/work-items/${encodeURIComponent(workItemId)}/relations`),
     {
       body: JSON.stringify(input),
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -189,7 +199,7 @@ export async function createWorkItemWatcher(
   userId: string,
 ): Promise<WorkItemWatcher> {
   const response = await fetchWithSession(
-    `/api/v1/work-items/${encodeURIComponent(workItemId)}/watchers`,
+    apiV1Path(`/work-items/${encodeURIComponent(workItemId)}/watchers`),
     {
       body: JSON.stringify({ userId }),
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -222,7 +232,7 @@ export async function createWorkItemAttachment(
   },
 ): Promise<WorkItemAttachment> {
   const response = await fetchWithSession(
-    `/api/v1/work-items/${encodeURIComponent(workItemId)}/attachments`,
+    apiV1Path(`/work-items/${encodeURIComponent(workItemId)}/attachments`),
     {
       body: JSON.stringify(input),
       headers: { Accept: "application/json", "Content-Type": "application/json" },
@@ -246,7 +256,7 @@ export async function createWorkItemAttachment(
 }
 
 export async function getPriorities(): Promise<PriorityItem[]> {
-  const response = await fetchWithSession("/api/v1/priorities", {
+  const response = await fetchWithSession(apiV1Path("/priorities"), {
     cache: "no-store",
     headers: { Accept: "application/json" },
   });
@@ -260,7 +270,7 @@ export async function getPriorities(): Promise<PriorityItem[]> {
 }
 
 export async function getUsers(search?: string): Promise<UserItem[]> {
-  const url = new URL("/api/v1/users", window.location.origin);
+  const url = new URL(apiV1Path("/users"), window.location.origin);
   if (search?.trim()) url.searchParams.set("search", search.trim());
 
   const response = await fetchWithSession(url.toString(), {

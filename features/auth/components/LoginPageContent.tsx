@@ -6,15 +6,14 @@ import Typography from "@mui/material/Typography";
 import { ArrowLeft, Building2, Mail } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-
 import { useSearchParams } from "next/navigation";
-
+import { useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/ui/Button";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { InputField } from "@/components/ui/InputField";
+import { apiV1Path } from "@/utils/api-path";
 
 import { buildAzureSignInUrl } from "../azure";
-import { loginWithEmail, navigateToAuthenticatedPath } from "../service";
+import { loginWithEmail, navigateToAuthenticatedPath, startOidcSignIn } from "../service";
 
 type LoginFormValues = {
   email: string;
@@ -24,8 +23,8 @@ type LoginFormValues = {
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function LoginPageContent() {
+  const { error: toastError, success } = useToast();
   const searchParams = useSearchParams();
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showEmailForm, setShowEmailForm] = useState(false);
   const { control, handleSubmit } = useForm<LoginFormValues>({
@@ -34,25 +33,32 @@ export function LoginPageContent() {
     reValidateMode: "onChange",
   });
 
-  const startAzureSignIn = () => {
-    setIsSubmitting(true);
-    window.location.assign(buildAzureSignInUrl());
+  const startAzureSignIn = async () => {
+    try {
+      setIsSubmitting(true);
+      await startOidcSignIn(buildAzureSignInUrl());
+    } catch (oidcError) {
+      toastError(
+        `${oidcError instanceof Error ? oidcError.message : "Unable to start Microsoft sign-in."}`,
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const openEmailSignIn = () => {
-    setError(null);
     setShowEmailForm(true);
   };
 
   const submit = async ({ email, password }: LoginFormValues) => {
     try {
       setIsSubmitting(true);
-      setError(null);
       await loginWithEmail({ email: email.trim(), password });
       const nextPath = searchParams.get("next");
+      success("Signed in successfully.");
       navigateToAuthenticatedPath(nextPath && nextPath.startsWith("/") ? nextPath : "/");
     } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : "Unable to sign in.");
+      toastError(`${loginError instanceof Error ? loginError.message : "Unable to sign in."}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -79,11 +85,6 @@ export function LoginPageContent() {
                 : "Choose how you want to sign in."}
             </Typography>
           </div>
-          {error ? (
-            <InlineAlert title="Unable to sign in" tone="error">
-              {error}
-            </InlineAlert>
-          ) : null}
           {showEmailForm ? (
             <Stack component="form" noValidate onSubmit={handleSubmit(submit)} spacing={3}>
               <InputField
@@ -120,7 +121,7 @@ export function LoginPageContent() {
                 Choose another method
               </Button>
               {process.env.NEXT_PUBLIC_APP_ENV === "development" ? (
-                <Button color="secondary" href="/api/auth/dev-login" variant="outline">
+                <Button color="secondary" href={apiV1Path("/auth/dev-login")} variant="outline">
                   Quick dev login
                 </Button>
               ) : null}

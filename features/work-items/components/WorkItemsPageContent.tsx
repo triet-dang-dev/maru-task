@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/common/EmptyState";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { useToast } from "@/components/ui/Toast";
 
 import { getWorkItems } from "../service";
 import type { WorkItemsViewModel } from "../types";
@@ -15,6 +15,7 @@ interface WorkItemsPageContentProps {
 }
 
 export function WorkItemsPageContent({ projectId }: WorkItemsPageContentProps) {
+  const { error: toastError } = useToast();
   const [data, setData] = useState<WorkItemsViewModel | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,15 +48,20 @@ export function WorkItemsPageContent({ projectId }: WorkItemsPageContentProps) {
     };
   }, [load]);
 
+  useEffect(() => {
+    if (error) toastError(error);
+  }, [error, toastError]);
+
   if (isLoading) {
     return <LoadingState label="Loading work items" />;
   }
 
   if (error) {
     return (
-      <InlineAlert title="Unable to load work items" tone="error">
-        {error}
-      </InlineAlert>
+      <EmptyState
+        description="Work items could not be loaded. Please try again later."
+        title="Work items are unavailable"
+      />
     );
   }
 

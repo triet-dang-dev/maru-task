@@ -26,7 +26,7 @@ describeLive("auth BFF route live .NET contract", () => {
     vi.stubEnv("USE_MOCK_API", "false");
 
     const loginResponse = await POST(
-      new Request("http://localhost:3000/api/auth/login/web-app", {
+      new Request("http://localhost:3000/api/v1/auth/login/web-app", {
         body: JSON.stringify({ email, password }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -40,7 +40,7 @@ describeLive("auth BFF route live .NET contract", () => {
     expect(loginSetCookie).toContain("HttpOnly");
 
     const meResponse = await GET(
-      new Request("http://localhost:3000/api/auth/me", {
+      new Request("http://localhost:3000/api/v1/auth/me", {
         headers: { Cookie: loginSetCookie ?? "" },
       }),
       { params: Promise.resolve({ action: ["me"] }) },
@@ -58,7 +58,8 @@ describeLive("auth BFF route live .NET contract", () => {
     const email =
       requiredEnv("AUTH_CONTRACT_FORBIDDEN_EMAIL") ?? requiredEnv("AUTH_CONTRACT_INVALID_EMAIL");
     const password =
-      requiredEnv("AUTH_CONTRACT_FORBIDDEN_PASSWORD") ?? requiredEnv("AUTH_CONTRACT_INVALID_PASSWORD");
+      requiredEnv("AUTH_CONTRACT_FORBIDDEN_PASSWORD") ??
+      requiredEnv("AUTH_CONTRACT_INVALID_PASSWORD");
 
     if (!email || !password) {
       throw new Error(
@@ -69,7 +70,7 @@ describeLive("auth BFF route live .NET contract", () => {
     vi.stubEnv("USE_MOCK_API", "false");
 
     const response = await POST(
-      new Request("http://localhost:3000/api/auth/login/web-app", {
+      new Request("http://localhost:3000/api/v1/auth/login/web-app", {
         body: JSON.stringify({ email, password }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -97,7 +98,7 @@ describeLive("auth BFF route live .NET contract", () => {
     vi.stubEnv("USE_MOCK_API", "false");
 
     const response = await GET(
-      new Request("http://localhost:3000/api/auth/me", {
+      new Request("http://localhost:3000/api/v1/auth/me", {
         headers: { Cookie: revokedCookie },
       }),
       { params: Promise.resolve({ action: ["me"] }) },
@@ -115,7 +116,7 @@ describeLive("auth BFF route live .NET contract", () => {
     vi.stubEnv("USE_MOCK_API", "false");
 
     const response = await POST(
-      new Request("http://localhost:3000/api/auth/logout", {
+      new Request("http://localhost:3000/api/v1/auth/logout", {
         body: JSON.stringify({ ignored: true }),
         headers: { "Content-Type": "application/json" },
         method: "POST",

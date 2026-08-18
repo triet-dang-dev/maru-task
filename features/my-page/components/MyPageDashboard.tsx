@@ -4,12 +4,12 @@ import Box from "@mui/material/Box";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/Button";
-import { InlineAlert } from "@/components/ui/InlineAlert";
 import { LoadingState } from "@/components/ui/LoadingState";
+import { useToast } from "@/components/ui/Toast";
 
 import { MyPageAddWidgetDialog } from "./MyPageAddWidgetDialog";
 import { MyPageWidgetCard } from "./MyPageWidgetCard";
@@ -32,15 +32,21 @@ export function MyPageDashboard({
   initialWidgets?: MyPageWidgetDefinition[];
   isLoading?: boolean;
 }) {
+  const { error: toastError } = useToast();
   const [widgets, setWidgets] = useState(initialWidgets);
   const [isAddingWidget, setIsAddingWidget] = useState(false);
+
+  useEffect(() => {
+    if (errorMessage) toastError(errorMessage);
+  }, [errorMessage, toastError]);
 
   if (isLoading) return <LoadingState label="Loading my page" lines={6} />;
   if (errorMessage) {
     return (
-      <InlineAlert title="Unable to load my page" tone="error">
-        {errorMessage}
-      </InlineAlert>
+      <EmptyState
+        description="Your personal overview could not be loaded. Please try again later."
+        title="My page is unavailable"
+      />
     );
   }
 

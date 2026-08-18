@@ -1,20 +1,22 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import { API_V1_PREFIX } from "@/utils/api-path";
+
 const defaultAuthCookieName = "jwt_token";
 const entraCallbackAliasPath = "/oauth/callback/azure-ad";
 
 function isPublicPath(pathname: string) {
   return (
-    pathname.startsWith("/api/auth/") ||
-    pathname === "/api/v1/health" ||
+    pathname.startsWith(`${API_V1_PREFIX}/auth/`) ||
+    pathname === `${API_V1_PREFIX}/health` ||
     pathname.startsWith("/_next/") ||
     pathname === "/favicon.ico"
   );
 }
 
 function isPrivateApiPath(pathname: string) {
-  return pathname.startsWith("/api/v1/");
+  return pathname.startsWith(`${API_V1_PREFIX}/`);
 }
 
 function isMockAuthEnabled() {
@@ -56,13 +58,12 @@ export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (pathname === entraCallbackAliasPath) {
-    const callbackUrl = new URL("/api/auth/oidc/entra/callback", request.url);
+    const callbackUrl = new URL(`${API_V1_PREFIX}/auth/oidc/entra/callback`, request.url);
     callbackUrl.search = request.nextUrl.search;
     return NextResponse.redirect(callbackUrl);
   }
 
   if (isMockAuthEnabled()) return NextResponse.next();
-
   const cookieName = process.env.AUTH_COOKIE_NAME ?? defaultAuthCookieName;
   const hasSessionCookie = Boolean(request.cookies.get(cookieName)?.value);
 

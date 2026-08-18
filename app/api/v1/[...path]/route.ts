@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { createBackendHeaders } from "@/utils/backend-request";
+import { createBackendHeaders, backendUrl } from "@/utils/backend-request";
 import {
   isBackendHttpMethod,
   resolvePassthroughBackendEndpoint,
@@ -46,10 +46,7 @@ async function proxyToBackend(request: Request, context: RouteContext) {
   const env = getServerEnv();
   if (env.USE_MOCK_API) return errorResponse(501, requestId, resolved.id);
 
-  const upstreamUrl = new URL(
-    resolved.backendPath,
-    `${env.DOTNET_API_BASE_URL.replace(/\/$/, "")}/`,
-  );
+  const upstreamUrl = new URL(backendUrl(env.DOTNET_API_BASE_URL, resolved.backendPath));
   upstreamUrl.search = requestUrl.search;
 
   const contentType = request.headers.get("content-type") ?? undefined;

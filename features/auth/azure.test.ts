@@ -4,6 +4,6 @@ import { buildAzureSignInUrl } from "./azure";
 
 describe("Azure browser handoff", () => {
   it("starts a top-level navigation through the same-origin OIDC BFF", () => {
-    expect(buildAzureSignInUrl()).toBe("/api/auth/oidc/entra/start");
+    expect(buildAzureSignInUrl()).toBe("/api/v1/auth/oidc/entra/start");
   });
 });

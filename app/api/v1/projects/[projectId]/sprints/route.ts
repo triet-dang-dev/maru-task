@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createMockSprint, getMockSprints } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 type RouteContext = { params: Promise<{ projectId: string }> };
@@ -113,7 +113,9 @@ export async function GET(request: Request, context: RouteContext) {
     );
   }
 
-  const upstreamUrl = new URL(`${env.DOTNET_API_BASE_URL}/projects/${projectId.data}/sprints`);
+  const upstreamUrl = new URL(
+    backendUrl(env.DOTNET_API_BASE_URL, `/projects/${projectId.data}/sprints`),
+  );
   upstreamUrl.searchParams.set("Take", String(take.data));
   if (lastSprintId?.success)
     upstreamUrl.searchParams.set("LastSprintId", String(lastSprintId.data));
@@ -182,7 +184,9 @@ export async function POST(request: Request, context: RouteContext) {
     });
   }
 
-  const upstreamUrl = new URL(`${env.DOTNET_API_BASE_URL}/projects/${projectId.data}/sprints`);
+  const upstreamUrl = new URL(
+    backendUrl(env.DOTNET_API_BASE_URL, `/projects/${projectId.data}/sprints`),
+  );
 
   let response: Response;
   try {

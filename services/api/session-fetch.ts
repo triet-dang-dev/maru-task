@@ -1,3 +1,5 @@
+import { apiV1Path } from "@/utils/api-path";
+
 let refreshPromise: Promise<boolean> | undefined;
 
 export const SESSION_EXPIRED_EVENT = "maru:session-expired";
@@ -9,7 +11,7 @@ export function notifySessionExpired() {
 }
 
 function refreshSessionOnce() {
-  refreshPromise ??= fetch("/api/auth/refresh", {
+  refreshPromise ??= fetch(apiV1Path("/auth/refresh"), {
     headers: { Accept: "application/json" },
     method: "POST",
   })

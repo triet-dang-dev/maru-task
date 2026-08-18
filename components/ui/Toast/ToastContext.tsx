@@ -115,7 +115,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         aria-live="polite"
         className="op-toasts-container"
         sx={{
-          bottom: 24,
+          top: 24,
           display: "flex",
           flexDirection: "column",
           gap: 1.5,

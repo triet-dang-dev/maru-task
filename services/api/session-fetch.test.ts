@@ -11,7 +11,7 @@ describe("fetchWithSession", () => {
     let sessionIsFresh = false;
     const fetchMock = vi.fn(async (input: string | URL) => {
       const url = input.toString();
-      if (url === "/api/auth/refresh") {
+      if (url === "/api/v1/auth/refresh") {
         await new Promise((resolve) => setTimeout(resolve, 10));
         sessionIsFresh = true;
         return new Response(null, { status: 200 });
@@ -28,14 +28,16 @@ describe("fetchWithSession", () => {
 
     expect(projects.status).toBe(200);
     expect(workItems.status).toBe(200);
-    expect(fetchMock.mock.calls.filter(([input]) => input === "/api/auth/refresh")).toHaveLength(1);
+    expect(fetchMock.mock.calls.filter(([input]) => input === "/api/v1/auth/refresh")).toHaveLength(
+      1,
+    );
   });
 
   it("returns the original unauthorized response when refresh fails", async () => {
     const expiredListener = vi.fn();
     window.addEventListener(SESSION_EXPIRED_EVENT, expiredListener, { once: true });
     const fetchMock = vi.fn(async (input: string | URL) =>
-      input.toString() === "/api/auth/refresh"
+      input.toString() === "/api/v1/auth/refresh"
         ? new Response(null, { status: 401 })
         : new Response("original unauthorized", { status: 401 }),
     );

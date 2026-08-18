@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { createMockWorkItemWatcher } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 type RouteContext = { params: Promise<{ workItemId: string }> };
@@ -64,7 +64,9 @@ export async function POST(request: Request, context: RouteContext) {
   let response: Response;
   try {
     response = await fetch(
-      new URL(`${env.DOTNET_API_BASE_URL}/work-packages/${parsedWorkItemId.data}/watchers`),
+      new URL(
+        backendUrl(env.DOTNET_API_BASE_URL, `/work-packages/${parsedWorkItemId.data}/watchers`),
+      ),
       {
         body: JSON.stringify(input.data),
         headers: createBackendHeaders(request, requestId, { contentType: "application/json" }),

@@ -23,7 +23,7 @@ describe("auth BFF route", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await POST(
-      new Request("http://localhost:3000/api/auth/login/web-app", {
+      new Request("http://localhost:3000/api/v1/auth/login/web-app", {
         body: JSON.stringify({ email: "person@example.com", password: "not-logged" }),
         headers: {
           "Content-Type": "application/json",
@@ -70,7 +70,7 @@ describe("auth BFF route", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await GET(
-      new Request("http://localhost:3000/api/auth/me", {
+      new Request("http://localhost:3000/api/v1/auth/me", {
         headers: { Cookie: "jwt_token=opaque" },
       }),
       { params: Promise.resolve({ action: ["me"] }) },
@@ -85,16 +85,38 @@ describe("auth BFF route", () => {
     });
   });
 
+  it("normalizes comma-joined auth cookies before forwarding an authenticated request", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ success: true, errorCode: "", data: true }), {
+        headers: { "Content-Type": "application/json" },
+        status: 200,
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await GET(
+      new Request("http://localhost:3000/api/v1/auth/me", {
+        headers: { Cookie: "jwt_token=access,refresh_token=refresh" },
+      }),
+      { params: Promise.resolve({ action: ["me"] }) },
+    );
+
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({
+      headers: expect.objectContaining({ Cookie: "jwt_token=access; refresh_token=refresh" }),
+      method: "GET",
+    });
+  });
+
   it("requires the mock session cookie and maps the current user to a browser session", async () => {
     vi.stubEnv("USE_MOCK_API", "true");
 
-    const anonymousResponse = await GET(new Request("http://localhost:3000/api/auth/me"), {
+    const anonymousResponse = await GET(new Request("http://localhost:3000/api/v1/auth/me"), {
       params: Promise.resolve({ action: ["me"] }),
     });
     expect(anonymousResponse.status).toBe(401);
 
     const sessionResponse = await GET(
-      new Request("http://localhost:3000/api/auth/me", {
+      new Request("http://localhost:3000/api/v1/auth/me", {
         headers: { Cookie: "jwt_token=mock-session" },
       }),
       { params: Promise.resolve({ action: ["me"] }) },
@@ -111,7 +133,7 @@ describe("auth BFF route", () => {
   it("provides the development mock session without a session cookie when mock auth is enabled", async () => {
     vi.stubEnv("MOCK_AUTH", "true");
 
-    const response = await GET(new Request("http://localhost:3000/api/auth/me"), {
+    const response = await GET(new Request("http://localhost:3000/api/v1/auth/me"), {
       params: Promise.resolve({ action: ["me"] }),
     });
 
@@ -138,7 +160,7 @@ describe("auth BFF route", () => {
     );
 
     const response = await POST(
-      new Request("http://localhost:3000/api/auth/login/web-app", {
+      new Request("http://localhost:3000/api/v1/auth/login/web-app", {
         body: JSON.stringify({ email: "person@example.com", password: "wrong-password" }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -170,7 +192,7 @@ describe("auth BFF route", () => {
     );
 
     const response = await GET(
-      new Request("http://localhost:3000/api/auth/me", {
+      new Request("http://localhost:3000/api/v1/auth/me", {
         headers: { Cookie: "jwt_token=opaque" },
       }),
       { params: Promise.resolve({ action: ["me"] }) },
@@ -197,7 +219,7 @@ describe("auth BFF route", () => {
     );
 
     const response = await GET(
-      new Request("http://localhost:3000/api/auth/me", {
+      new Request("http://localhost:3000/api/v1/auth/me", {
         headers: { Cookie: "jwt_token=opaque" },
       }),
       { params: Promise.resolve({ action: ["me"] }) },
@@ -224,7 +246,7 @@ describe("auth BFF route", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await POST(
-      new Request("http://localhost:3000/api/auth/logout", {
+      new Request("http://localhost:3000/api/v1/auth/logout", {
         body: JSON.stringify({ ignored: true }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
@@ -250,7 +272,7 @@ describe("auth BFF route", () => {
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    const response = await GET(new Request("http://localhost:3000/api/auth/oidc/entra/start"), {
+    const response = await GET(new Request("http://localhost:3000/api/v1/auth/oidc/entra/start"), {
       params: Promise.resolve({ action: ["oidc", "entra", "start"] }),
     });
 
@@ -259,9 +281,34 @@ describe("auth BFF route", () => {
       "https://login.microsoftonline.com/tenant/oauth2/v2.0/authorize",
     );
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
-      "http://localhost:5000/auth/oidc/entra/start",
+      "http://localhost:5000/api/v1/auth/oidc/entra/start",
     );
     expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: "GET", redirect: "manual" });
+  });
+
+  it("returns the authorization URL as JSON for an OIDC start preflight request", async () => {
+    vi.stubEnv("DOTNET_API_BASE_URL", "http://localhost:5000");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(null, {
+          headers: { Location: "https://login.microsoftonline.com/tenant/oauth2/v2.0/authorize" },
+          status: 302,
+        }),
+      ),
+    );
+
+    const response = await GET(
+      new Request("http://localhost:3000/api/v1/auth/oidc/entra/start", {
+        headers: { "X-OIDC-Start-Mode": "preflight" },
+      }),
+      { params: Promise.resolve({ action: ["oidc", "entra", "start"] }) },
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      redirectUrl: "https://login.microsoftonline.com/tenant/oauth2/v2.0/authorize",
+    });
   });
 
   it("forwards the Entra callback query and relays backend session cookies to the browser", async () => {
@@ -282,7 +329,7 @@ describe("auth BFF route", () => {
 
     const response = await GET(
       new Request(
-        "http://localhost:3000/api/auth/oidc/entra/callback?state=opaque-state&code=opaque-code&session_state=entra-session",
+        "http://localhost:3000/api/v1/auth/oidc/entra/callback?state=opaque-state&code=opaque-code&session_state=entra-session",
       ),
       { params: Promise.resolve({ action: ["oidc", "entra", "callback"] }) },
     );
@@ -291,8 +338,10 @@ describe("auth BFF route", () => {
     expect(response.headers.get("location")).toBe("https://app.example.test/home");
     expect(response.headers.get("set-cookie")).toContain("jwt_token=access");
     expect(response.headers.get("set-cookie")).toContain("refresh_token=refresh");
+    expect(response.headers.get("set-cookie")).toContain("SameSite=Lax");
+    expect(response.headers.get("set-cookie")).not.toContain("SameSite=Strict");
     expect(fetchMock.mock.calls[0][0].toString()).toBe(
-      "http://localhost:5000/auth/oidc/entra/callback?state=opaque-state&code=opaque-code&session_state=entra-session",
+      "http://localhost:5000/api/v1/auth/oidc/entra/callback?state=opaque-state&code=opaque-code&session_state=entra-session",
     );
     expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: "GET", redirect: "manual" });
   });
@@ -307,7 +356,7 @@ describe("auth BFF route", () => {
         ),
     );
 
-    const response = await GET(new Request("http://localhost:3000/api/auth/oidc/entra/start"), {
+    const response = await GET(new Request("http://localhost:3000/api/v1/auth/oidc/entra/start"), {
       params: Promise.resolve({ action: ["oidc", "entra", "start"] }),
     });
 
@@ -327,7 +376,7 @@ describe("auth BFF route", () => {
     );
 
     const response = await GET(
-      new Request("http://localhost:3000/api/auth/me", {
+      new Request("http://localhost:3000/api/v1/auth/me", {
         headers: { Cookie: "jwt_token=opaque" },
       }),
       { params: Promise.resolve({ action: ["me"] }) },
@@ -354,7 +403,7 @@ describe("auth BFF route", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await POST(
-      new Request("http://localhost:3000/api/auth/refresh", {
+      new Request("http://localhost:3000/api/v1/auth/refresh", {
         body: JSON.stringify({ ignored: true }),
         headers: { Cookie: "jwt_token=expired; refresh_token=refresh" },
         method: "POST",
@@ -384,7 +433,7 @@ describe("auth BFF route", () => {
     );
 
     const response = await POST(
-      new Request("https://app.example.test/api/auth/refresh", {
+      new Request("https://app.example.test/api/v1/auth/refresh", {
         headers: { Cookie: "jwt_token=expired; refresh_token=expired" },
         method: "POST",
       }),
@@ -408,7 +457,7 @@ describe("auth BFF route", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const response = await POST(
-      new Request("http://localhost:3000/api/auth/register", {
+      new Request("http://localhost:3000/api/v1/auth/register", {
         body: JSON.stringify({
           displayName: "Taylor Morgan",
           email: "taylor@example.com",
@@ -424,7 +473,9 @@ describe("auth BFF route", () => {
     );
 
     expect(response.status).toBe(200);
-    expect(fetchMock.mock.calls[0][0].toString()).toBe("http://localhost:5000/auth/register");
+    expect(fetchMock.mock.calls[0][0].toString()).toBe(
+      "http://localhost:5000/api/v1/auth/register",
+    );
     expect(fetchMock.mock.calls[0][1]).toMatchObject({
       body: JSON.stringify({
         displayName: "Taylor Morgan",

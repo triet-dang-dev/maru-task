@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getMockProject } from "@/app/api/mock-data";
-import { createBackendHeaders } from "@/utils/backend-request";
+import { backendUrl, createBackendHeaders } from "@/utils/backend-request";
 import { getServerEnv } from "@/utils/env.server";
 
 type RouteContext = { params: Promise<{ projectId: string }> };
@@ -52,7 +52,7 @@ export async function GET(request: Request, context: RouteContext) {
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${env.DOTNET_API_BASE_URL}/projects/${projectId.data}`, {
+    upstream = await fetch(backendUrl(env.DOTNET_API_BASE_URL, `/projects/${projectId.data}`), {
       headers,
       method: "GET",
       next: { revalidate: 0 },

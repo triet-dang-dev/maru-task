@@ -50,7 +50,7 @@ describe("auth proxy", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3000/api/auth/oidc/entra/callback?code=opaque-code&state=opaque-state&session_state=entra-session",
+      "http://localhost:3000/api/v1/auth/oidc/entra/callback?code=opaque-code&state=opaque-state&session_state=entra-session",
     );
   });
 

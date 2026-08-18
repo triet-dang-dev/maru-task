@@ -1,4 +1,5 @@
 import { getPublicEnv } from "@/utils/env";
+import { apiV1Path } from "@/utils/api-path";
 import { fetchWithSession } from "@/services/api/session-fetch";
 
 import type { SprintsResponse } from "./types";
@@ -22,7 +23,7 @@ export async function createSprint(
   input: { endDate: string | null; name: string; startDate: string | null },
 ): Promise<void> {
   const response = await fetchWithSession(
-    `/api/v1/projects/${encodeURIComponent(projectId)}/sprints`,
+    apiV1Path(`/projects/${encodeURIComponent(projectId)}/sprints`),
     {
       body: JSON.stringify(input),
       headers: {

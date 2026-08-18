@@ -16,7 +16,7 @@
     "format:check": "prettier . --check",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:auth-live": "vitest run app/api/auth/[...action]/route.live.test.ts",
+    "test:auth-live": "vitest run app/api/v1/auth/[...action]/route.live.test.ts",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "prepare": "husky"

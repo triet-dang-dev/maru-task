@@ -1,3 +1,5 @@
+import { apiV1Path } from "@/utils/api-path";
+
 export function buildAzureSignInUrl(): string {
-  return "/api/auth/oidc/entra/start";
+  return apiV1Path("/auth/oidc/entra/start");
 }
